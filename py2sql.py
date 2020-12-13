@@ -42,10 +42,20 @@ class Py2SQL:
         cur.close()
         return retval
 
+    def db_size():
+        db_name = Py2SQL.db_name()
+        cur = Py2SQL.__connection.cursor()
+
+        string_cmd = "select pg_size_pretty( pg_database_size('{}') );".format(db_name)
+
+        print(string_cmd)
+        cur.execute(string_cmd)
+        retval = cur.fetchone()[0]
+        cur.close()
+        return retval
+
 if __name__ == "__main__":
     db_config = DBConnectionInfo("test", "localhost", "adminadminadmin", "postgres")
     Py2SQL.db_connect(db_config)
-    name, ver = Py2SQL.db_engine()
-    print(name, ver)
-    print(Py2SQL.db_name())
+    print(Py2SQL.db_size())
     Py2SQL.db_disconnect()

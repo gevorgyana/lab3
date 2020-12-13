@@ -45,17 +45,44 @@ class Py2SQL:
     def db_size():
         db_name = Py2SQL.db_name()
         cur = Py2SQL.__connection.cursor()
-
+        # attention - no double quotes!
         string_cmd = "select pg_size_pretty( pg_database_size('{}') );".format(db_name)
-
-        print(string_cmd)
         cur.execute(string_cmd)
         retval = cur.fetchone()[0]
         cur.close()
         return retval
 
+    def db_tables():
+        db_name = Py2SQL.db_name()
+        cur = Py2SQL.__connection.cursor()
+        string_cmd = "select * from pg_catalog.pg_tables where schemaname != 'pg_catalog' and schemaname != 'information_schema';"
+        cur.execute(string_cmd)
+        retval = cur.fetchone()
+        cur.close()
+        return retval
+
+    """
+    def db_table_structure(table):
+        db_name = Py2SQL.db_name()
+        cur = Py2SQL.__connection.cursor()
+        # TODO Exception handling
+        string_cmd = "select column_name, data_type from information_schema.columns where table_name = '{}'".format(db_name)
+        cur.execute(string_cmd)
+        retval = cur.fetchone()
+        cur.close()
+
+        # post-process
+
+        print("before enumerating", retval)
+
+        retval = [(i, v) for i, v in enumerate(retval)]
+
+        return retval
+
+    """
+
 if __name__ == "__main__":
     db_config = DBConnectionInfo("test", "localhost", "adminadminadmin", "postgres")
     Py2SQL.db_connect(db_config)
-    print(Py2SQL.db_size())
+    # print(Py2SQL.db_table_structure("pg_settings"))
     Py2SQL.db_disconnect()

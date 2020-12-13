@@ -25,17 +25,27 @@ class Py2SQL:
 
     def db_engine():
         """
-        Examples:
-        >>> print(1)
+            Examples:
+            >>> name, version = Py2SQL.db_engine()
 
         """
         cur = Py2SQL.__connection.cursor()
         cur.execute("select version();")
+        retval = cur.fetchone()[0].split(' ')[:2]
         cur.close()
-        return cur.fetchone()[0].split(' ')[:2]
+        return retval
+
+    def db_name():
+        cur = Py2SQL.__connection.cursor()
+        cur.execute("select current_database();")
+        retval = cur.fetchone()[0]
+        cur.close()
+        return retval
 
 if __name__ == "__main__":
     db_config = DBConnectionInfo("test", "localhost", "adminadminadmin", "postgres")
     Py2SQL.db_connect(db_config)
-    print(Py2SQL.db_engine())
+    name, ver = Py2SQL.db_engine()
+    print(name, ver)
+    print(Py2SQL.db_name())
     Py2SQL.db_disconnect()

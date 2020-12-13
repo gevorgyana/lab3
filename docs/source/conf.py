@@ -13,7 +13,14 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
 
+# This should add the uppper directory
+# Run from project root:
+# The parent dir should be created usign `sphinx-apidoc -o docs .`
+sys.path.insert(0, os.path.abspath('..'))
+print(sys.path)
 
 # -- Project information -----------------------------------------------------
 
@@ -28,6 +35,8 @@ author = 'Artyom Gevorgyan, Maxim Bondar'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.viewcode'
 ]
 
 # Add any paths that contain templates here, relative to this directory.

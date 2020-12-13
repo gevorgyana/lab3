@@ -1,1 +1,4 @@
 *~
+docs/build
+*html
+test/test_postgres_in_docker_setup

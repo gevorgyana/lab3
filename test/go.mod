@@ -1,4 +1,4 @@
-module test_postgres_in_docker
+module test_postgres_in_docker_setup
 
 go 1.15
 

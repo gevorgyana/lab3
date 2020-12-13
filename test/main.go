@@ -1,3 +1,6 @@
+// This is a simple package to initialize a newly created
+// Postgres setup. It creates a sample `foo` database that
+// is not populated with anything.
 package main
 
 import (
@@ -7,11 +10,14 @@ import (
 )
 
 const (
+	// This should be in agreement with docker setup
 	host = "localhost"
 	port = 5432
-	user = "postgres"
 	password = "adminadminadmin"
-	// dbname = "foodb"
+
+	// This user can create databases to bootstrap the db,
+	// password is for this user, AFAIK
+	user = "postgres"
 )
 
 func main() {
@@ -24,19 +30,13 @@ func main() {
 	}
 	defer db.Close()
 
-	_, err = db.Exec("create database foo")
-	if err != nil {
-		panic(err)
-	}
-
-	res, err := db.Exec("select * from pg_database")
-	if err != nil {
-		panic(err)
-	}
-
 	err = db.Ping()
 	if err != nil {
 		panic(err)
 	}
 
+	_, err = db.Exec("create database test")
+	if err != nil {
+		panic(err)
+	}
 }

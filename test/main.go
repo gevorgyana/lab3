@@ -37,6 +37,16 @@ func main() {
 
 	_, err = db.Exec("create database test")
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+	}
+
+	_, err = db.Exec("CREATE TABLE distributors (did integer, name varchar(40), PRIMARY KEY(did));")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	_, err = db.Exec("insert into distributors values (1, 'foo');")
+	if err != nil {
+		fmt.Println(err)
 	}
 }

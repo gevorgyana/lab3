@@ -93,22 +93,27 @@ class Py2SQL:
         cur.close()
         # We have to flatten data because of the indices that have been
         # artificially added to enumerate the attributes.
-        retval = [(i, attr[0], attr[1]) for i, attr in enumerate(retval)]
+        retval = tuple([(i, attr[0], attr[1]) for i, attr in enumerate(retval)])
         return retval
 
-    '''
     @staticmethod
     def db_table_size(table):
+        pass
+    """
         cur = Py2SQL.__connection.cursor()
         string_cmd = "select pg_size_pretty( pg_total_relation_size('{}') );".format(table)
         cur.execute(string_cmd)
-        retval = cur.fetchone()[0]
+        # retval = cur.fetchone()[0]
+        retval = cur.fetchall()
+        print(retval)
+
         cur.close()
         return retval
-    '''
+"""
 
 if __name__ == "__main__":
     db_config = DBConnectionInfo("test", "localhost", "adminadminadmin", "postgres")
     Py2SQL.db_connect(db_config)
-    print(Py2SQL.db_table_size("pg_settings"))
+
+    # print(Py2SQL.db_table_size("pg_settings"))
     Py2SQL.db_disconnect()

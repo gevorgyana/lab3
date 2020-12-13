@@ -20,9 +20,11 @@ class Py2SQL:
             password=db.password
         )
 
+    @staticmethod
     def db_disconnect():
         Py2SQL.__connection.close()
 
+    @staticmethod
     def db_engine():
         """
             Examples:
@@ -35,6 +37,7 @@ class Py2SQL:
         cur.close()
         return retval
 
+    @staticmethod
     def db_name():
         cur = Py2SQL.__connection.cursor()
         cur.execute("select current_database();")
@@ -42,6 +45,7 @@ class Py2SQL:
         cur.close()
         return retval
 
+    @staticmethod
     def db_size():
         db_name = Py2SQL.db_name()
         cur = Py2SQL.__connection.cursor()
@@ -52,6 +56,7 @@ class Py2SQL:
         cur.close()
         return retval
 
+    @staticmethod
     def db_tables():
         db_name = Py2SQL.db_name()
         cur = Py2SQL.__connection.cursor()
@@ -61,28 +66,18 @@ class Py2SQL:
         cur.close()
         return retval
 
-    """
+    @staticmethod
     def db_table_structure(table):
-        db_name = Py2SQL.db_name()
         cur = Py2SQL.__connection.cursor()
-        # TODO Exception handling
-        string_cmd = "select column_name, data_type from information_schema.columns where table_name = '{}'".format(db_name)
+        string_cmd = "select column_name, data_type from information_schema.columns where table_name = '{}'".format(table)
         cur.execute(string_cmd)
-        retval = cur.fetchone()
+        retval = cur.fetchall()
         cur.close()
-
-        # post-process
-
-        print("before enumerating", retval)
-
-        retval = [(i, v) for i, v in enumerate(retval)]
-
+        retval = [(i, attr[0], attr[1]) for i, attr in enumerate(retval)]
         return retval
-
-    """
 
 if __name__ == "__main__":
     db_config = DBConnectionInfo("test", "localhost", "adminadminadmin", "postgres")
     Py2SQL.db_connect(db_config)
-    # print(Py2SQL.db_table_structure("pg_settings"))
+    Py2SQL.db_table_structure("pg_settings")
     Py2SQL.db_disconnect()

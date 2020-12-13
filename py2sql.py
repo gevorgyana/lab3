@@ -83,7 +83,7 @@ class Py2SQL:
         # the schemas coming from PostgreSQL.
         #
         # Reference: https://www.postgresql.org/docs/9.1/infoschema-tables.html
-        string_cmd = "select table_name from information_schema.tables where table_schema != 'pg_catalog' and table_schema != 'information_schema';"
+        string_cmd = "select table_name from information_schema.tables where table_schema != 'pg_catalog' and table_schema != 'information_schema' order by table_name asc;"
         cur.execute(string_cmd)
         retval = [i[0] for i in cur.fetchall()]
         cur.close()
@@ -92,24 +92,17 @@ class Py2SQL:
 
     @staticmethod
     def db_table_structure(table):
-        """Does not work
-        Uses this https://www.postgresql.org/docs/current/information-schema.html
-        page as a reference hugely.
+        """Works
+        Reference: https://www.postgresql.org/docs/current/information-schema.html
         """
         cur = Py2SQL.__connection.cursor()
-
-        # TODO Disallow showing anything not related to the user's
-        # schema (database)
-        string_cmd = "select column_name, data_type from information_schema.columns where table_name = '{}' and table_schema = '{}'".format(table, Py2SQL.db_name())
+        string_cmd = "select column_name, data_type from information_schema.columns where table_name = '{}' and table_schema != 'information_schema' and table_schema != 'pg_catalog'".format(table)
         cur.execute(string_cmd)
         retval = cur.fetchall()
         cur.close()
-        # We have to flatten data because of the indices that have been
-        # artificially added to enumerate the attributes.
         retval = tuple([(i, attr[0], attr[1]) for i, attr in enumerate(retval)])
         return retval
 
-    """
     @staticmethod
     def db_table_size(table):
         cur = Py2SQL.__connection.cursor()
@@ -121,16 +114,11 @@ class Py2SQL:
 
         cur.close()
         return retval
-    """
 
 if __name__ == "__main__":
-
-    # This code thinks that init code was already run from the test/main.go
-    # source file
+    # This code thinks that init code was already run from the
+    # test/main.go source file
     db_config = DBConnectionInfo("test", "localhost", "adminadminadmin", "postgres")
 
     Py2SQL.db_connect(db_config)
-    # print(Py2SQL.db_table_structure("pg_settings"))
-    print(Py2SQL.db_size())
-    # print(Py2SQL.db_table_size("distributors"))
     Py2SQL.db_disconnect()

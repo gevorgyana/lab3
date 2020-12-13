@@ -19,7 +19,8 @@ class Py2SQL:
             dbname=db.dbname,
             user=db.user,
             host=db.host,
-            password=db.password
+            password=db.password,
+            port=db.port
         )
 
     @staticmethod
@@ -57,37 +58,49 @@ class Py2SQL:
         db_name = Py2SQL.db_name()
         cur = Py2SQL.__connection.cursor()
         # attention - no double quotes!
-        string_cmd = "select pg_size_pretty( pg_database_size('{}') );".format(db_name)
+        # string_cmd = "select pg_size_pretty( pg_database_size('{}') );".format(db_name)
+        string_cmd = "select pg_database_size('{}');".format(db_name)
         cur.execute(string_cmd)
-        retval = cur.fetchone()[0]
+        retval = int(cur.fetchone()[0]) / 1024
         cur.close()
         return retval
 
     @staticmethod
     def db_tables():
-        """It works
+        """Works
         """
         db_name = Py2SQL.db_name()
         cur = Py2SQL.__connection.cursor()
-        # All tables that exist in the system can be obtained,
+
         # By default, there are 2 table schemas (databases),
         # they are `information_schema` and `pg_catalog`.
         #
         # We should of course filter the results to only show the
         # tables that belong to the user's schema (database). Hence the
         # `where`-clause.
-        string_cmd = "select * from information_schema.tables where table_schema = '{}' ;".format(Py2SQL.db_name())
+        # By default, new tables are put in `default` schema, but it is
+        # not clever to rely on this, it would be better to filter out
+        # the schemas coming from PostgreSQL.
+        #
+        # Reference: https://www.postgresql.org/docs/9.1/infoschema-tables.html
+        string_cmd = "select table_name from information_schema.tables where table_schema != 'pg_catalog' and table_schema != 'information_schema';"
         cur.execute(string_cmd)
-        retval = [(i[1], i[2]) for i in cur.fetchall()]
+        retval = [i[0] for i in cur.fetchall()]
         cur.close()
+        # Returns only one element, no no filtering is required
         return retval
 
     @staticmethod
     def db_table_structure(table):
-        """Works
+        """Does not work
+        Uses this https://www.postgresql.org/docs/current/information-schema.html
+        page as a reference hugely.
         """
         cur = Py2SQL.__connection.cursor()
-        string_cmd = "select column_name, data_type from information_schema.columns where table_name = '{}'".format(table)
+
+        # TODO Disallow showing anything not related to the user's
+        # schema (database)
+        string_cmd = "select column_name, data_type from information_schema.columns where table_name = '{}' and table_schema = '{}'".format(table, Py2SQL.db_name())
         cur.execute(string_cmd)
         retval = cur.fetchall()
         cur.close()
@@ -96,10 +109,9 @@ class Py2SQL:
         retval = tuple([(i, attr[0], attr[1]) for i, attr in enumerate(retval)])
         return retval
 
+    """
     @staticmethod
     def db_table_size(table):
-        pass
-    """
         cur = Py2SQL.__connection.cursor()
         string_cmd = "select pg_size_pretty( pg_total_relation_size('{}') );".format(table)
         cur.execute(string_cmd)
@@ -109,11 +121,16 @@ class Py2SQL:
 
         cur.close()
         return retval
-"""
+    """
 
 if __name__ == "__main__":
-    db_config = DBConnectionInfo("test", "localhost", "adminadminadmin", "postgres")
-    Py2SQL.db_connect(db_config)
 
-    # print(Py2SQL.db_table_size("pg_settings"))
+    # This code thinks that init code was already run from the test/main.go
+    # source file
+    db_config = DBConnectionInfo("test", "localhost", "adminadminadmin", "postgres")
+
+    Py2SQL.db_connect(db_config)
+    # print(Py2SQL.db_table_structure("pg_settings"))
+    print(Py2SQL.db_size())
+    # print(Py2SQL.db_table_size("distributors"))
     Py2SQL.db_disconnect()

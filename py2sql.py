@@ -61,7 +61,7 @@ class Py2SQL:
         # string_cmd = "select pg_size_pretty( pg_database_size('{}') );".format(db_name)
         string_cmd = "select pg_database_size('{}');".format(db_name)
         cur.execute(string_cmd)
-        retval = int(cur.fetchone()[0]) / 1024
+        retval = int(cur.fetchone()[0]) / 1024 / 1024
         cur.close()
         return retval
 
@@ -83,7 +83,7 @@ class Py2SQL:
         # the schemas coming from PostgreSQL.
         #
         # Reference: https://www.postgresql.org/docs/9.1/infoschema-tables.html
-        string_cmd = "select table_name from information_schema.tables where table_schema != 'pg_catalog' and table_schema != 'information_schema' order by table_name asc;"
+        string_cmd = "select table_name from information_schema.tables where table_schema != 'pg_catalog' and table_schema != 'information_schema' order by table_name;"
         cur.execute(string_cmd)
         retval = [i[0] for i in cur.fetchall()]
         cur.close()
@@ -106,12 +106,10 @@ class Py2SQL:
     @staticmethod
     def db_table_size(table):
         cur = Py2SQL.__connection.cursor()
-        string_cmd = "select pg_size_pretty( pg_total_relation_size('{}') );".format(table)
+        string_cmd = "select pg_total_relation_size('{}');".format(table)
         cur.execute(string_cmd)
-        # retval = cur.fetchone()[0]
-        retval = cur.fetchall()
+        retval = int(cur.fetchone()[0]) / 1024 / 1024
         print(retval)
-
         cur.close()
         return retval
 
@@ -119,6 +117,5 @@ if __name__ == "__main__":
     # This code thinks that init code was already run from the
     # test/main.go source file
     db_config = DBConnectionInfo("test", "localhost", "adminadminadmin", "postgres")
-
     Py2SQL.db_connect(db_config)
     Py2SQL.db_disconnect()

@@ -6,6 +6,7 @@ class TestClass:
         self.a=10
         self.b=123
         self.c=2.21
+        self.d="sda"
 
 if __name__ == "__main__":
     # This code thinks that init code was already run from the
@@ -15,9 +16,10 @@ if __name__ == "__main__":
     Py2SQL.db_connect(db_config)
 
     PyToSQL.db_save_class(TestClass)
-    PyToSQL.db_delete_class(TestClass)
+   # PyToSQL.db_delete_class(TestClass)
     test_obj=TestClass()
-    test_obj.a=20
- #   PyToSQL.db_save_object(test_obj)
+    test_obj.a=15
+    test_obj.d="saasd"
+    PyToSQL.db_save_object(test_obj)
 
     Py2SQL.db_disconnect()

@@ -1,6 +1,16 @@
 from py2sql import *
 
+
 class PyToSQL:
+    @staticmethod
+    def get_db_type(val):
+        if type(val) == int:
+            return "bigint"
+        elif type(val) == float:
+            return "real"
+        elif type(val) == str:
+            return "text"
+
     @staticmethod
     def db_save_class(class_to_save):
         """Works
@@ -8,7 +18,7 @@ class PyToSQL:
                 Add table for class_to_save and columns for static types variables
         """
         data = Py2SQL.__dict__
-#        var = Py2SQL.__connection
+        #        var = Py2SQL.__connection
 
         cur = Py2SQL.GetConnection().cursor()
 
@@ -57,7 +67,33 @@ class PyToSQL:
 
     @staticmethod
     def db_save_object(object_to_save):
-        cur = Py2SQL.__connection.cursor()
+        cur = Py2SQL.GetConnection().cursor()
 
-        data=object_to_save.__dict__.items()
-        pass
+        class_name = str(type(object_to_save).__name__)
+        if not class_name.lower() in Py2SQL.db_tables():
+            PyToSQL.db_save_class(type(object_to_save))
+
+        base_cmd = "insert into " + class_name + " values ("
+
+        var_cmd = ""
+
+        # get all vars from obj
+        for key, val in object_to_save.__dict__.items():
+            if PyToSQL.get_db_type(val) == "text":
+                var_cmd += "'"
+            var_cmd += str(val)
+            if PyToSQL.get_db_type(val) == "text":
+                var_cmd += "'"
+            var_cmd += ", "
+
+
+        if var_cmd[-2:] == ', ':
+            var_cmd = var_cmd[:-2]
+
+        var_cmd += ");"
+
+        cur.execute(base_cmd + var_cmd)
+
+        Py2SQL.GetConnection().commit()
+        cur.close()
+        print(base_cmd.lower() + var_cmd.lower())

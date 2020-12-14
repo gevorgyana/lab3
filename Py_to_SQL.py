@@ -39,10 +39,11 @@ class PyToSQL:
 
         Py2SQL.GetConnection().commit()
         cur.close()
-        print(string_cmd + var_cmd)
+        print(string_cmd.lower() + var_cmd.lower())
 
+    @staticmethod
     def db_delete_class(class_to_delete):
-        cur = Py2SQL.__connection.cursor()
+        cur = Py2SQL.GetConnection().cursor()
 
         class_name = str(class_to_delete.__name__)
 
@@ -50,7 +51,7 @@ class PyToSQL:
             # delete from DB
             cur.execute("drop table " + class_name.lower())
 
-        Py2SQL.__connection.commit()
+        Py2SQL.GetConnection().commit()
         cur.close()
         print("drop table " + class_name.lower())
 

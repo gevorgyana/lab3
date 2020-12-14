@@ -15,7 +15,7 @@ if __name__ == "__main__":
     Py2SQL.db_connect(db_config)
 
     PyToSQL.db_save_class(TestClass)
-
+    PyToSQL.db_delete_class(TestClass)
     test_obj=TestClass()
     test_obj.a=20
  #   PyToSQL.db_save_object(test_obj)

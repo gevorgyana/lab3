@@ -53,6 +53,11 @@ class PyToSQL:
 
     @staticmethod
     def db_delete_class(class_to_delete):
+        """
+            delete class table from DB is it exists
+            do nothing if it does not exits
+        """
+
         cur = Py2SQL.GetConnection().cursor()
 
         class_name = str(class_to_delete.__name__)
@@ -67,6 +72,11 @@ class PyToSQL:
 
     @staticmethod
     def db_save_object(object_to_save):
+        """
+                create a Table if it does not exist
+                also add row with data to the Table
+        """
+
         cur = Py2SQL.GetConnection().cursor()
 
         class_name = str(type(object_to_save).__name__)
@@ -86,8 +96,7 @@ class PyToSQL:
                 var_cmd += "'"
             var_cmd += ", "
 
-
-        if var_cmd[-2:] == ', ':
+        if ', ' == var_cmd[-2:]:
             var_cmd = var_cmd[:-2]
 
         var_cmd += ");"

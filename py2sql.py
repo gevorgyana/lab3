@@ -1,4 +1,5 @@
 import psycopg2
+import pickle
 
 class DBConnectionInfo:
     def __init__(self, dbname: str, host: str, password: str, user: str):
@@ -113,9 +114,3 @@ class Py2SQL:
         cur.close()
         return retval
 
-if __name__ == "__main__":
-    # This code thinks that init code was already run from the
-    # test/main.go source file
-    db_config = DBConnectionInfo("test", "localhost", "adminadminadmin", "postgres")
-    Py2SQL.db_connect(db_config)
-    Py2SQL.db_disconnect()

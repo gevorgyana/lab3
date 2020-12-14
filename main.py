@@ -21,5 +21,4 @@ if __name__ == "__main__":
     test_obj.a=15
     test_obj.d="saasd"
     PyToSQL.db_save_object(test_obj)
-
     Py2SQL.db_disconnect()

@@ -30,7 +30,7 @@ class PyToSQL:
 
         string_cmd = "create table " + class_name  # + \
 
-        var_cmd = " ("
+        var_cmd = " (address bigint Primary key, "
         var = class_to_save().__dict__.items()
         for (key, val) in class_to_save().__dict__.items():
             if type(val) == int:
@@ -84,8 +84,8 @@ class PyToSQL:
             PyToSQL.db_save_class(type(object_to_save))
 
         base_cmd = "insert into " + class_name + " values ("
-
-        var_cmd = ""
+        id(object_to_save)
+        var_cmd = str(id(object_to_save))+", "
 
         # get all vars from obj
         for key, val in object_to_save.__dict__.items():

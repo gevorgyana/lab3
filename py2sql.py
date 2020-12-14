@@ -13,6 +13,10 @@ class Py2SQL:
     __connection = None
 
     @staticmethod
+    def GetConnection():
+        return Py2SQL.__connection
+
+    @staticmethod
     def db_connect(db: DBConnectionInfo):
         """Works
         """

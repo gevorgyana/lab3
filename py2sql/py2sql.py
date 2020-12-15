@@ -3,7 +3,7 @@ import inspect
 import pickle
 import codecs
 
-DEBUG = True
+# DEBUG = True
 
 def log(*msg):
     if DEBUG:
@@ -46,8 +46,11 @@ class Py2SQL:
             >>> name, version = Py2SQL.db_engine()
         """
         cur = Py2SQL.__connection.cursor()
-        cur.execute("select version();")
+        string_cmd = "select version();"
+        log("executing:", string_cmd)
+        cur.execute(string_cmd)
         retval = cur.fetchone()[0].split(' ')[:2]
+        log("retval:", retval)
         cur.close()
         return retval
 
@@ -56,8 +59,11 @@ class Py2SQL:
         """Works
         """
         cur = Py2SQL.__connection.cursor()
-        cur.execute("select current_database();")
+        string_cmd = "select current_database();"
+        log("executing:", string_cmd)
+        cur.execute(string_cmd)
         retval = cur.fetchone()[0]
+        log("retval:", retval)
         cur.close()
         return retval
 
@@ -67,10 +73,12 @@ class Py2SQL:
         """
         db_name = Py2SQL.db_name()
         cur = Py2SQL.__connection.cursor()
-        # attention - no double quotes!
+        # Attention - no double quotes!
         string_cmd = "select pg_database_size('{}');".format(db_name)
+        log("executing:", string_cmd)
         cur.execute(string_cmd)
         retval = int(cur.fetchone()[0]) / 1024 / 1024
+        log("retval:", retval)
         cur.close()
         return retval
 
@@ -94,8 +102,10 @@ class Py2SQL:
         #
         # Reference: https://www.postgresql.org/docs/9.1/infoschema-tables.html
         string_cmd = "select table_name from information_schema.tables where table_schema != 'pg_catalog' and table_schema != 'information_schema' order by table_name;"
+        log("executing:", string_cmd)
         cur.execute(string_cmd)
         retval = [i[0] for i in cur.fetchall()]
+        log("retval:", retval)
         cur.close()
         return retval
 
@@ -105,20 +115,23 @@ class Py2SQL:
         """
         cur = Py2SQL.__connection.cursor()
         # Reference: https://www.postgresql.org/docs/current/information-schema.html
-        string_cmd = "select column_name, data_type from information_schema.columns where table_name = '{}' and table_schema != 'information_schema' and table_schema != 'pg_catalog'".format(table)
+        string_cmd = "select column_name, data_type from information_schema.columns where table_name = '{}' and table_schema != 'information_schema' and table_schema != 'pg_catalog' order by column_name".format(table)
+        log("executing:", string_cmd)
         cur.execute(string_cmd)
         retval = cur.fetchall()
         cur.close()
-        retval = tuple([(i, attr[0], attr[1]) for i, attr in enumerate(retval)])
+        retval = [(i, attr[0], attr[1]) for i, attr in enumerate(retval)]
+        log("retval:", retval)
         return retval
 
     @staticmethod
     def db_table_size(table):
         cur = Py2SQL.__connection.cursor()
         string_cmd = "select pg_total_relation_size('{}');".format(table)
+        log("executing:", string_cmd)
         cur.execute(string_cmd)
         retval = int(cur.fetchone()[0]) / 1024 / 1024
-        log(retval)
+        log("retval: ", retval)
         cur.close()
         return retval
 
@@ -164,9 +177,7 @@ class Py2SQL:
 
         string_cmd = string_cmd[:-2]
         string_cmd += ");"
-
-        log(string_cmd)
-
+        log("executing", string_cmd)
         cur.execute(string_cmd)
         cur.close()
         Py2SQL.__connection.commit()
@@ -191,7 +202,7 @@ class Py2SQL:
             string_cmd += "{} , ".format(codecs.encode(pickle.dumps(object_.__dict__[i]).decode()), "base64")
         string_cmd = string_cmd[:-2]
         string_cmd += ");"
-        log("DEBUG:RESULTING_STRING", string_cmd)
+        log("executing: ", string_cmd)
         cur.execute(string_cmd)
         cur.close()
         Py2SQL.__connection.commit()
@@ -209,35 +220,3 @@ class Py2SQL:
             Py2SQL.__save_class_with_foreign_key(front, front.__bases__)
             q = [*q, *list(front.__bases__)]
     """
-
-class Sample:
-    foo: int
-    bar: str
-    def __init__(self):
-        self.foo = 1
-        self.bar = "bar"
-
-class SubSample(Sample):
-    zoo: int
-    def __init__(self):
-        self.zoo = 2
-
-class Bar:
-    done: bool
-    def __init__(self):
-        self.done = True
-
-if __name__ == "__main__":
-    # This code thinks that init code was already run from the
-    # test/main.go source file
-
-    # `test` is the database name (!)
-    db_config = DBConnectionInfo("test", "localhost", "adminadminadmin", "postgres")
-    Py2SQL.db_connect(db_config)
-    # Py2SQL.save_class(Bar)
-    # print(Py2SQL.db_table_structure("bar"))
-    # b = Bar()
-    # Py2SQL.save_object(b)
-    # Py2SQL.save_hierarchy(SubSample)
-
-    Py2SQL.db_disconnect()

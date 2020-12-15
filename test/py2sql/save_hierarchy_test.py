@@ -3,6 +3,8 @@ import sys
 sys.path.append('../..')
 from py2sql import py2sql
 
+# DEBUG = True
+
 class Sample:
     foo: int
     bar: str

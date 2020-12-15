@@ -1,5 +1,6 @@
 import psycopg2
 import inspect
+import pickle
 
 class DBConnectionInfo:
     def __init__(self, dbname: str, host: str, password: str, user: str):
@@ -125,26 +126,44 @@ class Py2SQL:
         for t in inspect.getmembers(class_, lambda a:not(inspect.isroutine(a))):
             if t[0] == "__annotations__":
                 annotated_data = t[1]
-        string_cmd = "create table if not exists {} (id int primary key not null, ".format(class_.__name__)
+                # serial is autoincremented
+        string_cmd = "create table if not exists {} (id serial primary key not null, ".format(class_.__name__)
         for i in annotated_data.keys():
-            # TODO Customiztion point - add more types here - strings, lists etc.
-            if annotated_data[i] == int:
-                string_cmd += "{} int, ".format(i)
-            elif annotated_data[i] == str:
-                # varchar w/o numeric argument means 'text of arbitrary size'
-                string_cmd += "{} varchar, ".format(i)
+            string_cmd += "{} bytea, ".format(i)
+            # if annotated_data[i] == int:
         string_cmd = string_cmd[:-2]
         string_cmd += ");"
-        # print(string_cmd)
+        print(string_cmd)
+        cur.execute(string_cmd)
+        cur.close()
+        # __connection.commit()
+
+    @staticmethod
+    def save_object(object_):
+        """Inserts data into the database named after the class name of the object
+        """
+        table_name = type(object_).__name__
+
+        annotated_data = None
+        for t in inspect.getmembers(object_, lambda a:not(inspect.isroutine(a))):
+            if t[0] == "__annotations__":
+                annotated_data = t[1]
+        print(annotated_data)
+
+        cur = Py2SQL.__connection.cursor()
+
+        string_cmd = "insert into {} values (".format(table_name)
+        for i in annotated_data.keys():
+            string_cmd += "{} , ".format(pickle.dumps(object_.__dict__[i]))
+        string_cmd = string_cmd[:-2]
+        string_cmd += ");"
+        print(string_cmd)
         cur.execute(string_cmd)
         cur.close()
         # __connection.commit()
 
     @staticmethod
     def save_hierarchy(root_class):
-            """
-            1:1 relation is supported only
-            """
             pass
 
 class Sample:
@@ -157,6 +176,10 @@ if __name__ == "__main__":
     db_config = DBConnectionInfo("test", "localhost", "adminadminadmin", "postgres")
     Py2SQL.db_connect(db_config)
 
-    Py2SQL.save_class(Sample)
+
+    s = Sample()
+    s.foo = "done"
+    s.bar = "yes"
+    Py2SQL.save_object(s)
 
     Py2SQL.db_disconnect()

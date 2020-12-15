@@ -1,6 +1,7 @@
 import psycopg2
 import inspect
 import pickle
+import codecs
 
 DEBUG = True
 
@@ -181,14 +182,16 @@ class Py2SQL:
         for t in inspect.getmembers(object_, lambda a:not(inspect.isroutine(a))):
             if t[0] == "__annotations__":
                 annotated_data = t[1]
-        log(annotated_data)
+        # log(annotated_data)
         cur = Py2SQL.__connection.cursor()
         string_cmd = "insert into {} values (".format(table_name)
         for i in annotated_data.keys():
-            string_cmd += "{} , ".format(pickle.dumps(object_.__dict__[i], 0).decode())
+            log("DEBUG", object_.__dict__)
+            log("DEBUG", i)
+            string_cmd += "{} , ".format(codecs.encode(pickle.dumps(object_.__dict__[i]).decode()), "base64")
         string_cmd = string_cmd[:-2]
         string_cmd += ");"
-        log(string_cmd)
+        log("DEBUG:RESULTING_STRING", string_cmd)
         cur.execute(string_cmd)
         cur.close()
         Py2SQL.__connection.commit()

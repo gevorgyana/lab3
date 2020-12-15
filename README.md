@@ -11,3 +11,5 @@
 - https://www.python.org/dev/peps/pep-0249/
 - https://www.psycopg.org/docs/
 - https://www.sphinx-doc.org/en/master/
+
+3. Run unit tests in test/ directory

@@ -159,6 +159,7 @@ class Py2SQL:
     def save_object(object_):
         """Inserts data into the database named after the class name of the object.
         Should update the class representation when needed TODO.
+        TODO check if it exists - then modify. will do later
         """
         table_name = type(object_).__name__
         annotated_data = None

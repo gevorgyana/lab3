@@ -2,6 +2,12 @@ import psycopg2
 import inspect
 import pickle
 
+DEBUG = True
+
+def log(*msg):
+    if DEBUG:
+        print(*msg)
+
 class DBConnectionInfo:
     def __init__(self, dbname: str, host: str, password: str, user: str):
         self.dbname = dbname
@@ -34,8 +40,8 @@ class Py2SQL:
     @staticmethod
     def db_engine():
         """Works
-           Examples:
-           >>> name, version = Py2SQL.db_engine()
+        Examples:
+        >>> name, version = Py2SQL.db_engine()
         """
         cur = Py2SQL.__connection.cursor()
         cur.execute("select version();")
@@ -60,7 +66,6 @@ class Py2SQL:
         db_name = Py2SQL.db_name()
         cur = Py2SQL.__connection.cursor()
         # attention - no double quotes!
-        # string_cmd = "select pg_size_pretty( pg_database_size('{}') );".format(db_name)
         string_cmd = "select pg_database_size('{}');".format(db_name)
         cur.execute(string_cmd)
         retval = int(cur.fetchone()[0]) / 1024 / 1024
@@ -75,11 +80,12 @@ class Py2SQL:
         cur = Py2SQL.__connection.cursor()
 
         # By default, there are 2 table schemas (databases),
-        # they are `information_schema` and `pg_catalog`.
+        # (`information_schema` and `pg_catalog`) that store metadata.
         #
         # We should of course filter the results to only show the
         # tables that belong to the user's schema (database). Hence the
         # `where`-clause.
+        #
         # By default, new tables are put in `default` schema, but it is
         # not clever to rely on this, it would be better to filter out
         # the schemas coming from PostgreSQL.
@@ -89,15 +95,14 @@ class Py2SQL:
         cur.execute(string_cmd)
         retval = [i[0] for i in cur.fetchall()]
         cur.close()
-        # Returns only one element, no no filtering is required
         return retval
 
     @staticmethod
     def db_table_structure(table):
         """Works
-        Reference: https://www.postgresql.org/docs/current/information-schema.html
         """
         cur = Py2SQL.__connection.cursor()
+        # Reference: https://www.postgresql.org/docs/current/information-schema.html
         string_cmd = "select column_name, data_type from information_schema.columns where table_name = '{}' and table_schema != 'information_schema' and table_schema != 'pg_catalog'".format(table)
         cur.execute(string_cmd)
         retval = cur.fetchall()
@@ -111,7 +116,7 @@ class Py2SQL:
         string_cmd = "select pg_total_relation_size('{}');".format(table)
         cur.execute(string_cmd)
         retval = int(cur.fetchone()[0]) / 1024 / 1024
-        print(retval)
+        log(retval)
         cur.close()
         return retval
 
@@ -121,65 +126,84 @@ class Py2SQL:
         reading its columns. Does not try to create a table with a duplicate
         name.
         """
+        Py2SQL.__save_class_with_foreign_key(class_, [])
+
+    @staticmethod
+    def __save_class_with_foreign_key(class_, parents):
         cur = Py2SQL.__connection.cursor()
         annotated_data = None
         for t in inspect.getmembers(class_, lambda a:not(inspect.isroutine(a))):
             if t[0] == "__annotations__":
                 annotated_data = t[1]
-                # serial is autoincremented
+                # `serial` is autoincremented!
         string_cmd = "create table if not exists {} (id serial primary key not null, ".format(class_.__name__)
+
+        # Connect to already existing parent tables.
+        for p in parents:
+            parent_name = p.__name__
+            string_cmd += f"{parent_name}_id serial references {parent_name} (id), "
+
         for i in annotated_data.keys():
             string_cmd += "{} bytea, ".format(i)
-            # if annotated_data[i] == int:
+
         string_cmd = string_cmd[:-2]
         string_cmd += ");"
-        print(string_cmd)
+
+        log(string_cmd)
+
         cur.execute(string_cmd)
         cur.close()
         # __connection.commit()
 
     @staticmethod
     def save_object(object_):
-        """Inserts data into the database named after the class name of the object
+        """Inserts data into the database named after the class name of the object.
+        Should update the class representation when needed TODO.
         """
         table_name = type(object_).__name__
-
         annotated_data = None
         for t in inspect.getmembers(object_, lambda a:not(inspect.isroutine(a))):
             if t[0] == "__annotations__":
                 annotated_data = t[1]
-        print(annotated_data)
-
+        log(annotated_data)
         cur = Py2SQL.__connection.cursor()
-
         string_cmd = "insert into {} values (".format(table_name)
         for i in annotated_data.keys():
             string_cmd += "{} , ".format(pickle.dumps(object_.__dict__[i]))
         string_cmd = string_cmd[:-2]
         string_cmd += ");"
-        print(string_cmd)
+        log(string_cmd)
         cur.execute(string_cmd)
         cur.close()
         # __connection.commit()
 
     @staticmethod
     def save_hierarchy(root_class):
-            pass
+        q = [root_class]
+        while len(q) > 0:
+            log("list log 1:", q)
+            front = q.pop()
+            if front == object:
+                log("stop")
+                break
+            Py2SQL.__save_class_with_foreign_key(front, front.__bases__)
+            q = [*q, *list(front.__bases__)]
+
 
 class Sample:
     foo: int
     bar: str
+
+class SubSample(Sample):
+    zoo: int
+
+class Bar:
+    done: bool
 
 if __name__ == "__main__":
     # This code thinks that init code was already run from the
     # test/main.go source file
     db_config = DBConnectionInfo("test", "localhost", "adminadminadmin", "postgres")
     Py2SQL.db_connect(db_config)
-
-
-    s = Sample()
-    s.foo = "done"
-    s.bar = "yes"
-    Py2SQL.save_object(s)
-
+    Py2SQL.save_hierarchy(SubSample)
     Py2SQL.db_disconnect()

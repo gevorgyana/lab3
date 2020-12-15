@@ -1,4 +1,5 @@
 import psycopg2
+import inspect
 
 class DBConnectionInfo:
     def __init__(self, dbname: str, host: str, password: str, user: str):
@@ -113,9 +114,49 @@ class Py2SQL:
         cur.close()
         return retval
 
+    @staticmethod
+    def save_class(class_):
+        """Populates the database with the representation of a class, by
+        reading its columns. Does not try to create a table with a duplicate
+        name.
+        """
+        cur = Py2SQL.__connection.cursor()
+        annotated_data = None
+        for t in inspect.getmembers(class_, lambda a:not(inspect.isroutine(a))):
+            if t[0] == "__annotations__":
+                annotated_data = t[1]
+        string_cmd = "create table if not exists {} (id int primary key not null, ".format(class_.__name__)
+        for i in annotated_data.keys():
+            # TODO Customiztion point - add more types here - strings, lists etc.
+            if annotated_data[i] == int:
+                string_cmd += "{} int, ".format(i)
+            elif annotated_data[i] == str:
+                # varchar w/o numeric argument means 'text of arbitrary size'
+                string_cmd += "{} varchar, ".format(i)
+        string_cmd = string_cmd[:-2]
+        string_cmd += ");"
+        # print(string_cmd)
+        cur.execute(string_cmd)
+        cur.close()
+        # __connection.commit()
+
+    @staticmethod
+    def save_hierarchy(root_class):
+            """
+            1:1 relation is supported only
+            """
+            pass
+
+class Sample:
+    foo: int
+    bar: str
+
 if __name__ == "__main__":
     # This code thinks that init code was already run from the
     # test/main.go source file
     db_config = DBConnectionInfo("test", "localhost", "adminadminadmin", "postgres")
     Py2SQL.db_connect(db_config)
+
+    Py2SQL.save_class(Sample)
+
     Py2SQL.db_disconnect()

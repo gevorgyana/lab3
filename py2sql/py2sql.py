@@ -40,8 +40,9 @@ class Py2SQL:
     @staticmethod
     def db_engine():
         """Works
+
         Examples:
-        >>> name, version = Py2SQL.db_engine()
+            >>> name, version = Py2SQL.db_engine()
         """
         cur = Py2SQL.__connection.cursor()
         cur.execute("select version();")
@@ -125,12 +126,19 @@ class Py2SQL:
         """Populates the database with the representation of a class, by
         reading its columns. Does not try to create a table with a duplicate
         name.
+
+        Examples:
+            >>> class Foo:
+            >>>     value str
+            >>> foo = Foo
+            >>> Py2SQL.save_class(foo)
         """
         Py2SQL.__save_class_with_foreign_key(class_, [])
 
     @staticmethod
     def __save_class_with_foreign_key(class_, parents):
         cur = Py2SQL.__connection.cursor()
+        cur.execute("drop database {}".format(class.__name__))
         annotated_data = None
         for t in inspect.getmembers(class_, lambda a:not(inspect.isroutine(a))):
             if t[0] == "__annotations__":
@@ -153,13 +161,12 @@ class Py2SQL:
 
         cur.execute(string_cmd)
         cur.close()
-        # __connection.commit()
+        __connection.commit()
 
     @staticmethod
     def save_object(object_):
         """Inserts data into the database named after the class name of the object.
-        Should update the class representation when needed TODO.
-        TODO check if it exists - then modify. will do later
+        TODO ASK check if it exists - how??
         """
         table_name = type(object_).__name__
         annotated_data = None
@@ -176,8 +183,9 @@ class Py2SQL:
         log(string_cmd)
         cur.execute(string_cmd)
         cur.close()
-        # __connection.commit()
+        __connection.commit()
 
+    """
     @staticmethod
     def save_hierarchy(root_class):
         q = [root_class]
@@ -189,7 +197,7 @@ class Py2SQL:
                 break
             Py2SQL.__save_class_with_foreign_key(front, front.__bases__)
             q = [*q, *list(front.__bases__)]
-
+    """
 
 class Sample:
     foo: int
@@ -204,6 +212,8 @@ class Bar:
 if __name__ == "__main__":
     # This code thinks that init code was already run from the
     # test/main.go source file
+
+    # `test` is the database name (!)
     db_config = DBConnectionInfo("test", "localhost", "adminadminadmin", "postgres")
     Py2SQL.db_connect(db_config)
     Py2SQL.save_hierarchy(SubSample)

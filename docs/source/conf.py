@@ -10,23 +10,20 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
 import os
 import sys
-
-# This should add the uppper directory
-# Run from project root:
-# The parent dir should be created usign `sphinx-apidoc -o docs .`
 sys.path.insert(0, os.path.abspath('..'))
-print(sys.path)
+sys.path.insert(0, os.path.abspath('../..'))
+
 
 # -- Project information -----------------------------------------------------
 
 project = 'py2sql'
-copyright = '2020, Artyom Gevorgyan, Maxim Bondar'
-author = 'Artyom Gevorgyan, Maxim Bondar'
+copyright = '2020, Artyom Gevorgyan'
+author = 'Artyom Gevorgyan'
+
+# The full version, including alpha/beta/rc tags
+release = '0.0.1'
 
 
 # -- General configuration ---------------------------------------------------
@@ -35,8 +32,7 @@ author = 'Artyom Gevorgyan, Maxim Bondar'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.viewcode'
+    'sphinx.ext.autodoc'
 ]
 
 # Add any paths that contain templates here, relative to this directory.

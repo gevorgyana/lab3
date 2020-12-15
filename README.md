@@ -13,3 +13,7 @@
 - https://www.sphinx-doc.org/en/master/
 
 3. Run unit tests in test/ directory
+
+4. Docs were built using this guide https://stackoverflow.com/questions/59903051/sphinxs-autodocs-automodule-having-apparently-no-effect
+Sphinx automatically reads the docs
+It needs rst files as well as conf.py to be updated and maintained.

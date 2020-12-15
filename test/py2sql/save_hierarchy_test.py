@@ -1,4 +1,7 @@
 import unittest
+import sys
+sys.path.append('../..')
+from py2sql import py2sql
 
 class Sample:
     foo: int
@@ -11,13 +14,30 @@ class Bar:
     done: bool
 
 class TestSavingHierarchy(unittest.TestCase):
-    def test_normal_usecase():
+
+    db_config = py2sql.DBConnectionInfo("test", "localhost", "adminadminadmin", "postgres")
+
+    def tearDown(self):
+        py2sql.Py2SQL.db_connect(self.db_config)
+        py2sql.Py2SQL.drop_table("test")
+        py2sql.Py2SQL.db_disconnect()
+
+    def test_save_class_normal_usecase(self):
+        py2sql.Py2SQL.db_connect(self.db_config)
+        py2sql.Py2SQL.save_class(Bar)
+        self.assertNotEqual((), py2sql.Py2SQL.db_table_structure("bar"))
+        py2sql.Py2SQL.db_disconnect()
+
+    """
+    def test_save_object_normal_usecase(self):
         # This code thinks that init code was already run from the
         # test/main.go source file
-        db_config = DBConnectionInfo("test", "localhost", "adminadminadmin", "postgres")
-        Py2SQL.db_connect(db_config)
-        Py2SQL.save_hierarchy(SubSample)
-        Py2SQL.db_disconnect()
+        db_config = py2sql.DBConnectionInfo("test", "localhost", "adminadminadmin", "postgres")
+        py2sql.Py2SQL.db_connect(db_config)
+        py2sql.Py2SQL.save_class(Bar)
+        self.assertNotEqual((), py2sql.Py2SQL.db_table_structure("bar"))
+        py2sql.Py2SQL.db_disconnect()
+    """
 
 if __name__ == "__main__":
     unittest.main()

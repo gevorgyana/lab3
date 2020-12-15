@@ -122,6 +122,13 @@ class Py2SQL:
         return retval
 
     @staticmethod
+    def drop_table(table_name):
+        cur = Py2SQL.__connection.cursor()
+        cur.execute("drop table if exists {};".format(table_name))
+        cur.close()
+        Py2SQL.__connection.commit()
+
+    @staticmethod
     def save_class(class_):
         """Populates the database with the representation of a class, by
         reading its columns. Does not try to create a table with a duplicate
@@ -138,7 +145,7 @@ class Py2SQL:
     @staticmethod
     def __save_class_with_foreign_key(class_, parents):
         cur = Py2SQL.__connection.cursor()
-        cur.execute("drop database {}".format(class.__name__))
+        cur.execute("drop table if exists {};".format(class_.__name__))
         annotated_data = None
         for t in inspect.getmembers(class_, lambda a:not(inspect.isroutine(a))):
             if t[0] == "__annotations__":
@@ -161,12 +168,13 @@ class Py2SQL:
 
         cur.execute(string_cmd)
         cur.close()
-        __connection.commit()
+        Py2SQL.__connection.commit()
 
     @staticmethod
     def save_object(object_):
         """Inserts data into the database named after the class name of the object.
-        TODO ASK check if it exists - how??
+        TODO ASK check if it exists - how?? Got it now. Set private id of object.
+        TODO Need to catch an exception for when a table is not created yet
         """
         table_name = type(object_).__name__
         annotated_data = None
@@ -177,13 +185,13 @@ class Py2SQL:
         cur = Py2SQL.__connection.cursor()
         string_cmd = "insert into {} values (".format(table_name)
         for i in annotated_data.keys():
-            string_cmd += "{} , ".format(pickle.dumps(object_.__dict__[i]))
+            string_cmd += "{} , ".format(pickle.dumps(object_.__dict__[i], 0).decode())
         string_cmd = string_cmd[:-2]
         string_cmd += ");"
         log(string_cmd)
         cur.execute(string_cmd)
         cur.close()
-        __connection.commit()
+        Py2SQL.__connection.commit()
 
     """
     @staticmethod
@@ -202,12 +210,19 @@ class Py2SQL:
 class Sample:
     foo: int
     bar: str
+    def __init__(self):
+        self.foo = 1
+        self.bar = "bar"
 
 class SubSample(Sample):
     zoo: int
+    def __init__(self):
+        self.zoo = 2
 
 class Bar:
     done: bool
+    def __init__(self):
+        self.done = True
 
 if __name__ == "__main__":
     # This code thinks that init code was already run from the
@@ -216,5 +231,10 @@ if __name__ == "__main__":
     # `test` is the database name (!)
     db_config = DBConnectionInfo("test", "localhost", "adminadminadmin", "postgres")
     Py2SQL.db_connect(db_config)
-    Py2SQL.save_hierarchy(SubSample)
+    # Py2SQL.save_class(Bar)
+    # print(Py2SQL.db_table_structure("bar"))
+    # b = Bar()
+    # Py2SQL.save_object(b)
+    # Py2SQL.save_hierarchy(SubSample)
+
     Py2SQL.db_disconnect()

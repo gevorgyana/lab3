@@ -1,4 +1,6 @@
 import psycopg2
+
+from dataclasses import dataclass
 import inspect
 import pickle
 import codecs
@@ -17,13 +19,16 @@ def log(*msg):
     if DEBUG:
         print(*msg)
 
+@dataclass
 class DBConnectionInfo:
-    def __init__(self, dbname: str, host: str, password: str, user: str):
-        self.dbname = dbname
-        self.host = host
-        self.password = password
-        self.user = user
-        self.port = 5432
+    """This is a data object that should contain the fileds necessary to connect
+    to the underlying database: dbname, host, password, user.
+    """
+    dbname: str
+    host: str
+    password: str
+    user: str
+    port: int = 5432
 
 class Py2SQL:
     __connection = None
@@ -152,8 +157,9 @@ class Py2SQL:
 
     @staticmethod
     def drop_table(table_name):
-        """Drops the table. TODO this should not be exported to the user,
-        as this only runs in unit tests.
+        """Drops the table. This should not be exported to the user,
+        as this only runs in unit tests. But it can't be done, as unit tests
+        rely on this method. So it remains here.
 
         Parameters
         ----------
@@ -275,19 +281,3 @@ class Py2SQL:
             Py2SQL.__save_class_with_foreign_key(front, front.__bases__)
             q = [*q, *list(front.__bases__)]
     """
-
-
-class S:
-    foo: int
-    bar: int
-    def __init__(self, foo, bar):
-        self.foo = foo
-        self.bar = bar
-
-if __name__ == "__main__":
-    con = DBConnectionInfo("test", "localhost", "adminadminadmin", "postgres")
-    Py2SQL.db_connect(con)
-    Py2SQL.save_class(S)
-    s = S("one", 1)
-    Py2SQL.save_object(s)
-    Py2SQL.db_disconnect()

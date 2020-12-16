@@ -1,9 +1,9 @@
 import unittest
 import sys
+import os
 sys.path.append('../..')
+print(os.path.abspath(sys.path[-1]))
 from py2sql import py2sql
-
-# DEBUG = True
 
 class Sample:
     foo: int

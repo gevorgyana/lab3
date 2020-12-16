@@ -3,6 +3,7 @@ import inspect
 import pickle
 import codecs
 
+DEBUG = False
 # DEBUG = True
 
 def log(*msg):
@@ -22,8 +23,6 @@ class Py2SQL:
 
     @staticmethod
     def db_connect(db: DBConnectionInfo):
-        """Works
-        """
         Py2SQL.__connection = psycopg2.connect(
             dbname=db.dbname,
             user=db.user,
@@ -34,14 +33,11 @@ class Py2SQL:
 
     @staticmethod
     def db_disconnect():
-        """Works
-        """
         Py2SQL.__connection.close()
 
     @staticmethod
     def db_engine():
-        """Works
-
+        """
         Examples:
             >>> name, version = Py2SQL.db_engine()
         """
@@ -56,8 +52,6 @@ class Py2SQL:
 
     @staticmethod
     def db_name():
-        """Works
-        """
         cur = Py2SQL.__connection.cursor()
         string_cmd = "select current_database();"
         log("executing:", string_cmd)
@@ -69,8 +63,6 @@ class Py2SQL:
 
     @staticmethod
     def db_size():
-        """Works
-        """
         db_name = Py2SQL.db_name()
         cur = Py2SQL.__connection.cursor()
         # Attention - no double quotes!
@@ -84,8 +76,6 @@ class Py2SQL:
 
     @staticmethod
     def db_tables():
-        """Works
-        """
         db_name = Py2SQL.db_name()
         cur = Py2SQL.__connection.cursor()
 
@@ -111,8 +101,6 @@ class Py2SQL:
 
     @staticmethod
     def db_table_structure(table):
-        """Works
-        """
         cur = Py2SQL.__connection.cursor()
         # Reference: https://www.postgresql.org/docs/current/information-schema.html
         string_cmd = "select column_name, data_type from information_schema.columns where table_name = '{}' and table_schema != 'information_schema' and table_schema != 'pg_catalog' order by column_name".format(table)
@@ -131,7 +119,7 @@ class Py2SQL:
         log("executing:", string_cmd)
         cur.execute(string_cmd)
         retval = int(cur.fetchone()[0]) / 1024 / 1024
-        log("retval: ", retval)
+        log("retval:", retval)
         cur.close()
         return retval
 
@@ -177,7 +165,7 @@ class Py2SQL:
 
         string_cmd = string_cmd[:-2]
         string_cmd += ");"
-        log("executing", string_cmd)
+        log("executing:", string_cmd)
         cur.execute(string_cmd)
         cur.close()
         Py2SQL.__connection.commit()
@@ -197,12 +185,10 @@ class Py2SQL:
         cur = Py2SQL.__connection.cursor()
         string_cmd = "insert into {} values (".format(table_name)
         for i in annotated_data.keys():
-            log("DEBUG", object_.__dict__)
-            log("DEBUG", i)
             string_cmd += "{} , ".format(codecs.encode(pickle.dumps(object_.__dict__[i]).decode()), "base64")
         string_cmd = string_cmd[:-2]
         string_cmd += ");"
-        log("executing: ", string_cmd)
+        log("executing:", string_cmd)
         cur.execute(string_cmd)
         cur.close()
         Py2SQL.__connection.commit()

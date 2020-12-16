@@ -157,6 +157,15 @@ class Py2SQL:
         return retval
 
     @staticmethod
+    def _create_table(table_name, schema):
+        """Creates a sample table with the given name. Used in testing modules.
+        """
+        cur = Py2SQL.__connection.cursor()
+        cur.execute("create table {} {};".format(table_name, schema))
+        cur.close()
+        Py2SQL.__connection.commit()
+
+    @staticmethod
     def _drop_table(table_name):
         """Drops the table. This should not be exported to the user,
         as this only runs in unit tests. But it can't be done, as unit tests
@@ -168,7 +177,7 @@ class Py2SQL:
         table_name : table name of user's interest.
         """
         cur = Py2SQL.__connection.cursor()
-        cur.execute("drop table if exists {};".format(table_name))
+        cur.execute("drop table if exists {};".format(table_name.lower()))
         cur.close()
         Py2SQL.__connection.commit()
 
@@ -220,8 +229,8 @@ class Py2SQL:
         string_cmd += ");"
         log("executing:", string_cmd)
         cur.execute(string_cmd)
-        cur.close()
         Py2SQL.__connection.commit()
+        cur.close()
 
     @staticmethod
     def save_object(object_):
@@ -242,20 +251,25 @@ class Py2SQL:
         """
         table_name = type(object_).__name__
         cur = Py2SQL.__connection.cursor()
-        # UNIT_CORNER 1 more unit test case: check if a table is already there
-        table_exists = cur.execute("select exists (select * from information_schema.tables where table_name = %s)", ('',))
-        if cur.fetchone()[0] == False:
+
+        # In PostgreSQL, tables are always created with lowercase names,
+        # TODO should store metatdata about which names are already taken
+        table_exists = cur.execute("select exists (select * from information_schema.tables where table_name = %s)", tuple([table_name.lower()]))
+        fetched = cur.fetchone()
+        if fetched[0] == False:
             raise NotImplementedError("This ORM requires a user to run save_class() before running save_object()")
+
         annotated_data = None
         for t in inspect.getmembers(object_, lambda a:not(inspect.isroutine(a))):
             if t[0] == "__annotations__":
                 annotated_data = t[1]
+
         specific_columns = ""
         for i in annotated_data.keys():
             specific_columns += str(i)
             specific_columns += ","
         specific_columns = specific_columns[:-1]
-        print("COLUMNS", specific_columns)
+
         string_cmd = "insert into {} ({}) values (".format(table_name, specific_columns)
         attr_values = []
         for i in annotated_data.keys():
@@ -263,6 +277,7 @@ class Py2SQL:
             string_cmd += "%s , ".format(pickle.dumps(object_.__dict__[i]))
         string_cmd = string_cmd[:-2]
         string_cmd += ");"
+
         log("executing:", string_cmd)
         cur.execute(string_cmd, tuple(attr_values))
         cur.close()
@@ -270,6 +285,9 @@ class Py2SQL:
         cur = Py2SQL.__connection.cursor()
         cur.close()
 
+    @staticmethod
+    def delete_class(class_):
+        Py2SQL._drop_table(class_.__name__)
     """
     @staticmethod
     def save_hierarchy(root_class):

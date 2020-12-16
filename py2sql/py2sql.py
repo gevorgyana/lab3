@@ -79,17 +79,6 @@ class Py2SQL:
         db_name = Py2SQL.db_name()
         cur = Py2SQL.__connection.cursor()
 
-        # By default, there are 2 table schemas (databases),
-        # (`information_schema` and `pg_catalog`) that store metadata.
-        #
-        # We should of course filter the results to only show the
-        # tables that belong to the user's schema (database). Hence the
-        # `where`-clause.
-        #
-        # By default, new tables are put in `default` schema, but it is
-        # not clever to rely on this, it would be better to filter out
-        # the schemas coming from PostgreSQL.
-        #
         # Reference: https://www.postgresql.org/docs/9.1/infoschema-tables.html
         string_cmd = "select table_name from information_schema.tables where table_schema != 'pg_catalog' and table_schema != 'information_schema' order by table_name;"
         log("executing:", string_cmd)
@@ -202,11 +191,16 @@ class Py2SQL:
         cur.execute(string_cmd, tuple(attr_values))
         cur.close()
         Py2SQL.__connection.commit()
-        # foo
+        # run a select now to verify that the record has been added.
+        # there can be a problem with database vieweres, if this select statement
+        # gives results, then most probably everything is fine, so you should check
+        # your database viewing tool.
         cur = Py2SQL.__connection.cursor()
         cur.execute("select * from s;")
         print(cur.fetchall())
         cur.close()
+
+
 
     """
     @staticmethod

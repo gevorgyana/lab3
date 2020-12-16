@@ -130,7 +130,7 @@ class Py2SQL:
         """
         cur = Py2SQL.__connection.cursor()
         # Reference: https://www.postgresql.org/docs/current/information-schema.html
-        string_cmd = "select column_name, data_type from information_schema.columns where table_name = '{}' and table_schema != 'information_schema' and table_schema not like 'pg%' order by column_name".format(table)
+        string_cmd = "select column_name, data_type from information_schema.columns where table_name = '{}' and table_schema != 'information_schema' and table_schema not like 'pg%' ".format(table)
         log("executing:", string_cmd)
         cur.execute(string_cmd)
         retval = cur.fetchall()

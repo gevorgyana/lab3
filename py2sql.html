@@ -1,0 +1,154 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module py2sql</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>py2sql</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/artyom/lab3/py2sql/py2sql.py">/home/artyom/lab3/py2sql/py2sql.py</a></font></td></tr></table>
+    <p></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="codecs.html">codecs</a><br>
+</td><td width="25%" valign=top><a href="inspect.html">inspect</a><br>
+</td><td width="25%" valign=top><a href="pickle.html">pickle</a><br>
+</td><td width="25%" valign=top><a href="psycopg2.html">psycopg2</a><br>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="builtins.html#object">builtins.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="py2sql.html#DBConnectionInfo">DBConnectionInfo</a>
+</font></dt><dt><font face="helvetica, arial"><a href="py2sql.html#Py2SQL">Py2SQL</a>
+</font></dt><dt><font face="helvetica, arial"><a href="py2sql.html#S">S</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="DBConnectionInfo">class <strong>DBConnectionInfo</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt><a href="#DBConnectionInfo">DBConnectionInfo</a>(dbname:&nbsp;str,&nbsp;host:&nbsp;str,&nbsp;password:&nbsp;str,&nbsp;user:&nbsp;str)<br>
+&nbsp;<br>
+<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="DBConnectionInfo-__init__"><strong>__init__</strong></a>(self, dbname: str, host: str, password: str, user: str)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Py2SQL">class <strong>Py2SQL</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Static methods defined here:<br>
+<dl><dt><a name="Py2SQL-db_connect"><strong>db_connect</strong></a>(db: py2sql.DBConnectionInfo)</dt></dl>
+
+<dl><dt><a name="Py2SQL-db_disconnect"><strong>db_disconnect</strong></a>()</dt></dl>
+
+<dl><dt><a name="Py2SQL-db_engine"><strong>db_engine</strong></a>()</dt><dd><tt>Examples:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&gt;&gt;&gt;&nbsp;name,&nbsp;version&nbsp;=&nbsp;<a href="#Py2SQL">Py2SQL</a>.<a href="#Py2SQL-db_engine">db_engine</a>()</tt></dd></dl>
+
+<dl><dt><a name="Py2SQL-db_name"><strong>db_name</strong></a>()</dt></dl>
+
+<dl><dt><a name="Py2SQL-db_size"><strong>db_size</strong></a>()</dt></dl>
+
+<dl><dt><a name="Py2SQL-db_table_size"><strong>db_table_size</strong></a>(table)</dt></dl>
+
+<dl><dt><a name="Py2SQL-db_table_structure"><strong>db_table_structure</strong></a>(table)</dt></dl>
+
+<dl><dt><a name="Py2SQL-db_tables"><strong>db_tables</strong></a>()</dt></dl>
+
+<dl><dt><a name="Py2SQL-drop_table"><strong>drop_table</strong></a>(table_name)</dt></dl>
+
+<dl><dt><a name="Py2SQL-save_class"><strong>save_class</strong></a>(class_)</dt><dd><tt>Populates&nbsp;the&nbsp;database&nbsp;with&nbsp;the&nbsp;representation&nbsp;of&nbsp;a&nbsp;class,&nbsp;by<br>
+reading&nbsp;its&nbsp;columns.&nbsp;Does&nbsp;not&nbsp;try&nbsp;to&nbsp;create&nbsp;a&nbsp;table&nbsp;with&nbsp;a&nbsp;duplicate<br>
+name.<br>
+&nbsp;<br>
+Examples:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&gt;&gt;&gt;&nbsp;class&nbsp;Foo:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&gt;&gt;&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value&nbsp;str<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&gt;&gt;&gt;&nbsp;foo&nbsp;=&nbsp;Foo<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&gt;&gt;&gt;&nbsp;<a href="#Py2SQL">Py2SQL</a>.<a href="#Py2SQL-save_class">save_class</a>(foo)</tt></dd></dl>
+
+<dl><dt><a name="Py2SQL-save_object"><strong>save_object</strong></a>(object_)</dt><dd><tt>Inserts&nbsp;data&nbsp;into&nbsp;the&nbsp;database&nbsp;named&nbsp;after&nbsp;the&nbsp;class&nbsp;name&nbsp;of&nbsp;the&nbsp;<a href="builtins.html#object">object</a>.<br>
+TODO&nbsp;ASK&nbsp;check&nbsp;if&nbsp;it&nbsp;exists&nbsp;-&nbsp;how??&nbsp;Got&nbsp;it&nbsp;now.&nbsp;Set&nbsp;private&nbsp;id&nbsp;of&nbsp;<a href="builtins.html#object">object</a>.<br>
+TODO&nbsp;Need&nbsp;to&nbsp;catch&nbsp;an&nbsp;exception&nbsp;for&nbsp;when&nbsp;a&nbsp;table&nbsp;is&nbsp;not&nbsp;created&nbsp;yet</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="S">class <strong>S</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt><a href="#S">S</a>(foo,&nbsp;bar)<br>
+&nbsp;<br>
+<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="S-__init__"><strong>__init__</strong></a>(self, foo, bar)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>__annotations__</strong> = {'bar': &lt;class 'int'&gt;, 'foo': &lt;class 'int'&gt;}</dl>
+
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-log"><strong>log</strong></a>(*msg)</dt></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>DEBUG</strong> = True</td></tr></table>
+</body></html>

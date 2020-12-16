@@ -22,6 +22,11 @@ Sphinx automatically reads the docs
 It needs rst files as well as conf.py to be updated and maintained.
 
 5. For demonstration, play with Pycharm database viewing tools (download plugin).
+Alternatively, use the following command to launch dockerized psql instance:
+```
+docker run -it --rm --network some-network postgres psql -h some-postgres -U postgres
+```
+You will be able to interactively view the changes being done to the database.
 
 6. Build the project:
 ```

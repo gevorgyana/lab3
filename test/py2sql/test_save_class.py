@@ -1,27 +1,24 @@
 import unittest
+from dataclasses import dataclass
 import sys
 import os
 sys.path.append('../..')
 from py2sql import py2sql
 
+@dataclass
 class Sample:
-    foo: int
-    bar: str
-    def __init__(self):
-        self.foo = 1
-        self.bar = "bar"
+    foo: int = 0
+    bar: str = "bar"
 
+@dataclass
 class SubSample(Sample):
-    zoo: int
-    def __init__(self):
-        self.zoo = 2
+    zoo: int = 1
 
+@dataclass
 class Bar:
-    done: bool
-    def __init__(self):
-        self.done = True
+    done: bool = True
 
-class TestSaveClass(unittest.TestCase):
+class TestClassSaveDelete(unittest.TestCase):
 
     table_name = "test"
     db_config = py2sql.DBConnectionInfo(table_name, "localhost", "adminadminadmin", "postgres")

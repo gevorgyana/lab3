@@ -106,3 +106,17 @@ class PyToSQL:
         Py2SQL.GetConnection().commit()
         cur.close()
         print(base_cmd.lower() + var_cmd.lower())
+
+    @staticmethod
+    def db_delete_object(object_to_delete):
+        """
+                        delete the row from class table if it exists
+        """
+
+        cur = Py2SQL.GetConnection().cursor()
+        primary_key = str(id(object_to_delete))
+        delete_cmd="delete from " + str(type(object_to_delete).__name__) +" where address = " + primary_key + " returning *;"
+        cur.execute(delete_cmd)
+        Py2SQL.GetConnection().commit()
+        cur.close()
+        print(delete_cmd)

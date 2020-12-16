@@ -183,7 +183,6 @@ class Py2SQL:
         specific_columns = specific_columns[:-1]
         print("COLUMNS", specific_columns)
         string_cmd = "insert into {} ({}) values (".format(table_name, specific_columns)
-        log("THIS IS IT", object_.__dict__)
         attr_values = []
         for i in annotated_data.keys():
             attr_values.append(pickle.dumps(object_.__dict__[i]))

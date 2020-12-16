@@ -2,7 +2,6 @@ import unittest
 import sys
 import os
 sys.path.append('../..')
-print(os.path.abspath(sys.path[-1]))
 from py2sql import py2sql
 
 class Sample:
@@ -41,7 +40,7 @@ class TestSavingHierarchy(unittest.TestCase):
 
     def test_save_object_normal_usecase(self):
         py2sql.Py2SQL.db_connect(self.db_config)
-        b = Bar
+        b = Bar()
         py2sql.Py2SQL.save_object(b)
         py2sql.Py2SQL.db_disconnect()
 

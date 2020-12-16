@@ -4,7 +4,7 @@ import pickle
 import codecs
 
 DEBUG = False
-# DEBUG = True
+DEBUG = True
 
 def log(*msg):
     if DEBUG:
@@ -181,17 +181,26 @@ class Py2SQL:
         for t in inspect.getmembers(object_, lambda a:not(inspect.isroutine(a))):
             if t[0] == "__annotations__":
                 annotated_data = t[1]
-        # log(annotated_data)
         cur = Py2SQL.__connection.cursor()
-        string_cmd = "insert into {} values (".format(table_name)
+
+        specific_columns = ""
         for i in annotated_data.keys():
-            string_cmd += "{} , ".format(codecs.encode(pickle.dumps(object_.__dict__[i]).decode()), "base64")
+            specific_columns += str(i)
+        print("COLUMNS", specific_columns)
+
+        string_cmd = "insert into {} ({}) values (".format(table_name, specific_columns)
+
+        log("THIS IS IT", object_.__dict__)
+        attr_values = []
+        for i in annotated_data.keys():
+            attr_values.append(pickle.dumps(object_.__dict__[i]))
+            string_cmd += "%s , ".format(pickle.dumps(object_.__dict__[i]))
         string_cmd = string_cmd[:-2]
         string_cmd += ");"
         log("executing:", string_cmd)
-        cur.execute(string_cmd)
+        cur.execute(string_cmd, tuple(attr_values))
         cur.close()
-        Py2SQL.__connection.commit()
+        # Py2SQL.__connection.commit()
 
     """
     @staticmethod

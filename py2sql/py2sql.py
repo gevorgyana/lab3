@@ -6,6 +6,13 @@ import codecs
 DEBUG = False
 DEBUG = True
 
+"""
+TODO
+- Delete by content
+- Map into user types (not only bytea)
+- No hierarchy (only save and delete)
+"""
+
 def log(*msg):
     if DEBUG:
         print(*msg)
@@ -78,7 +85,6 @@ class Py2SQL:
     def db_tables():
         db_name = Py2SQL.db_name()
         cur = Py2SQL.__connection.cursor()
-
         # Reference: https://www.postgresql.org/docs/9.1/infoschema-tables.html
         string_cmd = "select table_name from information_schema.tables where table_schema != 'pg_catalog' and table_schema != 'information_schema' order by table_name;"
         log("executing:", string_cmd)
@@ -92,7 +98,7 @@ class Py2SQL:
     def db_table_structure(table):
         cur = Py2SQL.__connection.cursor()
         # Reference: https://www.postgresql.org/docs/current/information-schema.html
-        string_cmd = "select column_name, data_type from information_schema.columns where table_name = '{}' and table_schema != 'information_schema' and table_schema != 'pg_catalog' order by column_name".format(table)
+        string_cmd = "select column_name, data_type from information_schema.columns where table_name = '{}' and table_schema != 'information_schema' and table_schema not like 'pg%' order by column_name".format(table)
         log("executing:", string_cmd)
         cur.execute(string_cmd)
         retval = cur.fetchall()
@@ -143,15 +149,12 @@ class Py2SQL:
                 annotated_data = t[1]
                 # `serial` is autoincremented!
         string_cmd = "create table if not exists {} (id serial primary key not null, ".format(class_.__name__)
-
         # Connect to already existing parent tables.
         for p in parents:
             parent_name = p.__name__
             string_cmd += f"{parent_name}_id serial references {parent_name} (id), "
-
         for i in annotated_data.keys():
             string_cmd += "{} bytea, ".format(i)
-
         string_cmd = string_cmd[:-2]
         string_cmd += ");"
         log("executing:", string_cmd)
@@ -163,7 +166,7 @@ class Py2SQL:
     def save_object(object_):
         """Inserts data into the database named after the class name of the object.
         TODO ASK check if it exists - how?? Got it now. Set private id of object.
-        TODO Need to catch an exception for when a table is not created yet
+        TODO Need to catch an exception for when a table is not created yet.
         """
         table_name = type(object_).__name__
         annotated_data = None
@@ -171,14 +174,12 @@ class Py2SQL:
             if t[0] == "__annotations__":
                 annotated_data = t[1]
         cur = Py2SQL.__connection.cursor()
-
         specific_columns = ""
         for i in annotated_data.keys():
             specific_columns += str(i)
             specific_columns += ","
         specific_columns = specific_columns[:-1]
         print("COLUMNS", specific_columns)
-
         string_cmd = "insert into {} ({}) values (".format(table_name, specific_columns)
         log("THIS IS IT", object_.__dict__)
         attr_values = []
@@ -199,8 +200,6 @@ class Py2SQL:
         cur.execute("select * from s;")
         print(cur.fetchall())
         cur.close()
-
-
 
     """
     @staticmethod

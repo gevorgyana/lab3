@@ -86,7 +86,7 @@ class Py2SQL:
         db_name = Py2SQL.db_name()
         cur = Py2SQL.__connection.cursor()
         # Reference: https://www.postgresql.org/docs/9.1/infoschema-tables.html
-        string_cmd = "select table_name from information_schema.tables where table_schema != 'pg_catalog' and table_schema != 'information_schema' order by table_name;"
+        string_cmd = "select table_name from information_schema.tables where table_schema not like 'pg_%' and table_schema != 'information_schema' order by table_name;"
         log("executing:", string_cmd)
         cur.execute(string_cmd)
         retval = [i[0] for i in cur.fetchall()]
@@ -165,15 +165,17 @@ class Py2SQL:
     @staticmethod
     def save_object(object_):
         """Inserts data into the database named after the class name of the object.
-        TODO ASK check if it exists - how?? Got it now. Set private id of object.
-        TODO Need to catch an exception for when a table is not created yet.
         """
         table_name = type(object_).__name__
+        cur = Py2SQL.__connection.cursor()
+        # UNIT_CORNER 1 more unit test case: check if a table is already there
+        table_exists = cur.execute("select exists (select * from information_schema.tables where table_name = %s)", ('',))
+        if cur.fetchone()[0] == False:
+            raise NotImplementedError("This ORM requires a user to run save_class() before running save_object()")
         annotated_data = None
         for t in inspect.getmembers(object_, lambda a:not(inspect.isroutine(a))):
             if t[0] == "__annotations__":
                 annotated_data = t[1]
-        cur = Py2SQL.__connection.cursor()
         specific_columns = ""
         for i in annotated_data.keys():
             specific_columns += str(i)
@@ -192,13 +194,7 @@ class Py2SQL:
         cur.execute(string_cmd, tuple(attr_values))
         cur.close()
         Py2SQL.__connection.commit()
-        # run a select now to verify that the record has been added.
-        # there can be a problem with database vieweres, if this select statement
-        # gives results, then most probably everything is fine, so you should check
-        # your database viewing tool.
         cur = Py2SQL.__connection.cursor()
-        cur.execute("select * from s;")
-        print(cur.fetchall())
         cur.close()
 
     """

@@ -1,4 +1,8 @@
 *~
+__pycache__
+.idea
+psycho_orm_frankenstein.egg-info/
+dist/
 docs/build
 *html
-test/test_postgres_in_docker_setup
+setup/test_postgres_in_docker_setup

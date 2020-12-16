@@ -22,3 +22,9 @@ Sphinx automatically reads the docs
 It needs rst files as well as conf.py to be updated and maintained.
 
 5. For demonstration, play with Pycharm database viewing tools (download plugin).
+
+6. Build the project:
+```
+python setup.py sdist
+twine upload dist/*
+```

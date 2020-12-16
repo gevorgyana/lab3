@@ -186,10 +186,11 @@ class Py2SQL:
         specific_columns = ""
         for i in annotated_data.keys():
             specific_columns += str(i)
+            specific_columns += ","
+        specific_columns = specific_columns[:-1]
         print("COLUMNS", specific_columns)
 
         string_cmd = "insert into {} ({}) values (".format(table_name, specific_columns)
-
         log("THIS IS IT", object_.__dict__)
         attr_values = []
         for i in annotated_data.keys():
@@ -200,7 +201,12 @@ class Py2SQL:
         log("executing:", string_cmd)
         cur.execute(string_cmd, tuple(attr_values))
         cur.close()
-        # Py2SQL.__connection.commit()
+        Py2SQL.__connection.commit()
+        # foo
+        cur = Py2SQL.__connection.cursor()
+        cur.execute("select * from s;")
+        print(cur.fetchall())
+        cur.close()
 
     """
     @staticmethod
@@ -215,3 +221,19 @@ class Py2SQL:
             Py2SQL.__save_class_with_foreign_key(front, front.__bases__)
             q = [*q, *list(front.__bases__)]
     """
+
+
+class S:
+    foo: int
+    bar: int
+    def __init__(self, foo, bar):
+        self.foo = foo
+        self.bar = bar
+
+if __name__ == "__main__":
+    con = DBConnectionInfo("test", "localhost", "adminadminadmin", "postgres")
+    Py2SQL.db_connect(con)
+    Py2SQL.save_class(S)
+    s = S("one", 1)
+    Py2SQL.save_object(s)
+    Py2SQL.db_disconnect()

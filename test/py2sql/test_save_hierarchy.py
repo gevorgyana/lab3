@@ -44,6 +44,22 @@ class TestSavingHierarchy(unittest.TestCase):
         py2sql.Py2SQL.save_object(b)
         py2sql.Py2SQL.db_disconnect()
 
+    def test_integration(self):
+
+        class S:
+            foo: int
+            bar: int
+            def __init__(self, foo, bar):
+                self.foo = foo
+                self.bar = bar
+
+        con = py2sql.DBConnectionInfo("test", "localhost", "adminadminadmin", "postgres")
+        py2sql.Py2SQL.db_connect(con)
+        py2sql.Py2SQL.save_class(S)
+        s = S("one", 1)
+        py2sql.Py2SQL.save_object(s)
+        py2sql.Py2SQL.db_disconnect()
+
 
 if __name__ == "__main__":
     unittest.main()

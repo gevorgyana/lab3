@@ -20,3 +20,5 @@ python -m unittest discover -s test/py2sql/
 4. Docs were built using this guide https://stackoverflow.com/questions/59903051/sphinxs-autodocs-automodule-having-apparently-no-effect
 Sphinx automatically reads the docs
 It needs rst files as well as conf.py to be updated and maintained.
+
+5. For demonstration, play with Pycharm database viewing tools (download plugin).

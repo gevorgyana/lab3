@@ -28,7 +28,7 @@ class TestSaveClass(unittest.TestCase):
 
     def tearDown(self):
         py2sql.Py2SQL.db_connect(self.db_config)
-        py2sql.Py2SQL.drop_table(self.table_name)
+        py2sql.Py2SQL._drop_table(self.table_name)
         py2sql.Py2SQL.db_disconnect()
 
     def test_save_class_called_twice(self):

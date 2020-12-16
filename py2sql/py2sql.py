@@ -35,7 +35,8 @@ class Py2SQL:
 
     @staticmethod
     def db_connect(db: DBConnectionInfo):
-        """
+        """Connect to the database.
+
         Parameters
         ----------
         db : DBConnectionInfo
@@ -156,10 +157,11 @@ class Py2SQL:
         return retval
 
     @staticmethod
-    def drop_table(table_name):
+    def _drop_table(table_name):
         """Drops the table. This should not be exported to the user,
         as this only runs in unit tests. But it can't be done, as unit tests
-        rely on this method. So it remains here.
+        rely on this method. So it remains here. This method is protected so that
+        we have an easier time calling it in the test module.
 
         Parameters
         ----------

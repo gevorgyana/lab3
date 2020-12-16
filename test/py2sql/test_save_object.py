@@ -13,7 +13,7 @@ class F(unittest.TestCase):
 
     def tearDown(self):
         py2sql.Py2SQL.db_connect(self.db_config)
-        py2sql.Py2SQL.drop_table("test")
+        py2sql.Py2SQL._drop_table("test")
         py2sql.Py2SQL.db_disconnect()
 
     def save_object_with_no_class_raises_exception():

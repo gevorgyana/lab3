@@ -10,7 +10,7 @@ class TestGeneralAccess(unittest.TestCase):
 
     def tearDown(self):
         py2sql.Py2SQL.db_connect(self.db_config)
-        py2sql.Py2SQL.drop_table("test")
+        py2sql.Py2SQL._drop_table("test")
         py2sql.Py2SQL.db_disconnect()
 
     def run_all_readonly_functions():

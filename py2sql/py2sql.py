@@ -30,6 +30,13 @@ class Py2SQL:
 
     @staticmethod
     def db_connect(db: DBConnectionInfo):
+        """
+        Parameters
+        ----------
+        db : DBConnectionInfo
+            An object that contains necessary information for connecting to
+            the database.
+        """
         Py2SQL.__connection = psycopg2.connect(
             dbname=db.dbname,
             user=db.user,
@@ -45,7 +52,11 @@ class Py2SQL:
     @staticmethod
     def db_engine():
         """
+        Returns a tuple that represents the name of the underlying
+        database and its version.
+
         Examples:
+        ---------
             >>> name, version = Py2SQL.db_engine()
         """
         cur = Py2SQL.__connection.cursor()
@@ -59,6 +70,8 @@ class Py2SQL:
 
     @staticmethod
     def db_name():
+        """Returns the name of the current database.
+        """
         cur = Py2SQL.__connection.cursor()
         string_cmd = "select current_database();"
         log("executing:", string_cmd)
@@ -70,6 +83,8 @@ class Py2SQL:
 
     @staticmethod
     def db_size():
+        """Returns the size of the current database.
+        """
         db_name = Py2SQL.db_name()
         cur = Py2SQL.__connection.cursor()
         # Attention - no double quotes!
@@ -83,6 +98,9 @@ class Py2SQL:
 
     @staticmethod
     def db_tables():
+        """Returns the names of the tables that currently exist in the system.
+        This method does not respect the system tables (`information_schema` & `pg*`).
+        """
         db_name = Py2SQL.db_name()
         cur = Py2SQL.__connection.cursor()
         # Reference: https://www.postgresql.org/docs/9.1/infoschema-tables.html
@@ -96,6 +114,14 @@ class Py2SQL:
 
     @staticmethod
     def db_table_structure(table):
+        """
+        Returns a list describing the structure of the database. Each list element is
+        a tuple of the following king: (column_number, column_name, column_type).
+
+        Parameters
+        ----------
+        table : table name of user's interest.
+        """
         cur = Py2SQL.__connection.cursor()
         # Reference: https://www.postgresql.org/docs/current/information-schema.html
         string_cmd = "select column_name, data_type from information_schema.columns where table_name = '{}' and table_schema != 'information_schema' and table_schema not like 'pg%' order by column_name".format(table)
@@ -109,6 +135,12 @@ class Py2SQL:
 
     @staticmethod
     def db_table_size(table):
+        """Returns the size of the table.
+
+        Parameters
+        ----------
+        table : table name of user's interest.
+        """
         cur = Py2SQL.__connection.cursor()
         string_cmd = "select pg_total_relation_size('{}');".format(table)
         log("executing:", string_cmd)
@@ -120,6 +152,13 @@ class Py2SQL:
 
     @staticmethod
     def drop_table(table_name):
+        """Drops the table. TODO this should not be exported to the user,
+        as this only runs in unit tests.
+
+        Parameters
+        ----------
+        table_name : table name of user's interest.
+        """
         cur = Py2SQL.__connection.cursor()
         cur.execute("drop table if exists {};".format(table_name))
         cur.close()
@@ -132,6 +171,7 @@ class Py2SQL:
         name.
 
         Examples:
+        ---------
             >>> class Foo:
             >>>     value str
             >>> foo = Foo
@@ -141,6 +181,19 @@ class Py2SQL:
 
     @staticmethod
     def __save_class_with_foreign_key(class_, parents):
+        """This is private method that contains the logic of creating
+        a PostgreSQL table with the foreign keys defined by parents. This method
+        uses reflection to check annotated attributes of the class and decide
+        the layout of the to-be-created table.
+
+        Parameters
+        ----------
+        class_ : the class that should be mapped onto the database.
+
+        parents : the classes that are considered as foreign to this class. That is,
+        these classes should be its parents and contain data that complements the
+        objects of type class_.
+        """
         cur = Py2SQL.__connection.cursor()
         cur.execute("drop table if exists {};".format(class_.__name__))
         annotated_data = None
@@ -164,7 +217,20 @@ class Py2SQL:
 
     @staticmethod
     def save_object(object_):
-        """Inserts data into the database named after the class name of the object.
+        """Writes a representation of the object to the database. It looks at the
+        object't underlying type (via reflection) to decide where to write the object.
+        This function uses the annotated attributes of the object's type to decide
+        what data to store in the database (columns).
+
+        Parameters
+        ----------
+        object_ : the object whose representation should appear in the database.
+
+        Raises
+        ------
+        NotImplementedError
+            If save_class() has not been previously called, then this method does not
+            find the corresponding table and raises the exception.
         """
         table_name = type(object_).__name__
         cur = Py2SQL.__connection.cursor()

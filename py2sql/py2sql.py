@@ -10,7 +10,6 @@ DEBUG = True
 
 """
 TODO
-- Delete by content
 - Map into user types (not only bytea)
 - No hierarchy (only save and delete)
 """
@@ -276,9 +275,9 @@ class Py2SQL:
             attr_values.append(pickle.dumps(object_.__dict__[i]))
             string_cmd += "%s , ".format(pickle.dumps(object_.__dict__[i]))
         string_cmd = string_cmd[:-2]
-        string_cmd += ");"
+        string_cmd += ")"
 
-        log("executing:", string_cmd)
+        log("executing:", string_cmd, "with", attr_values)
         cur.execute(string_cmd, tuple(attr_values))
         cur.close()
         Py2SQL.__connection.commit()
@@ -287,7 +286,46 @@ class Py2SQL:
 
     @staticmethod
     def delete_class(class_):
+        """Removes the representation of the class in the database.
+
+        Parameters
+        ----------
+        class_ : the class that contains annotated attributes that define the
+        schema of the to-be-created table.
+        """
         Py2SQL._drop_table(class_.__name__)
+
+    @staticmethod
+    def delete_object(object_):
+        """Removes the representation of the object in the database by looking at
+        the table defined by its type, then trying to find the values in the
+        database that represent it. More specifically, we first try to find
+        an object by primary_key (if an object defines one), and if we fail,
+        delete it by removing all rows from the table that have the same structure
+        as the attributes of the class.
+
+        Parameters
+        ----------
+            object_ : the object that guides the process of removal
+        """
+        class_name = object_.__class__.__name__
+
+        sql_statement = 'delete from {} where '.format(class_name.lower())
+        byte_repr = []
+        annotated_attributes = object_.__annotations__
+        for k in annotated_attributes.keys():
+            sql_statement += "{} = %s and ".format(k)
+            byte_repr.append(pickle.dumps(object_.__dict__[k]))
+        sql_statement = sql_statement[:-4]
+        sql_statement += ";"
+
+        cur = Py2SQL.__connection.cursor()
+        print("byte representation: ", byte_repr)
+        print("executing:", sql_statement, "with the data: ", tuple(byte_repr))
+        cur.execute(sql_statement, tuple(byte_repr))
+        Py2SQL.__connection.commit()
+        cur.close()
+
     """
     @staticmethod
     def save_hierarchy(root_class):

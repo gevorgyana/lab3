@@ -20,7 +20,6 @@ class TestSaveDeleteObject(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             py2sql.Py2SQL.save_object(b)
         py2sql.Py2SQL.db_disconnect()
-
         py2sql.Py2SQL.db_connect(self.db_config)
         py2sql.Py2SQL.delete_class(Bar)
         self.assertEqual([],
@@ -30,20 +29,33 @@ class TestSaveDeleteObject(unittest.TestCase):
 
     def test_save_class_and_object(self):
         py2sql.Py2SQL.db_connect(self.db_config)
-
         @dataclass
         class S:
             foo: int = 0
             bar: int = 1
-
         py2sql.Py2SQL.save_class(S)
         s = S("one", 1)
         py2sql.Py2SQL.save_object(s)
         py2sql.Py2SQL.db_disconnect()
-
         py2sql.Py2SQL.db_connect(self.db_config)
         py2sql.Py2SQL.delete_class(S)
         self.assertEqual([],
             py2sql.Py2SQL.db_table_structure("s")
         )
+        py2sql.Py2SQL.db_disconnect()
+
+    def test_save_and_delete(self):
+        @dataclass
+        class Foo:
+            foo: str = "val"
+
+        f = Foo()
+        db_con_info = py2sql.DBConnectionInfo("test", "localhost", "adminadminadmin", "postgres")
+        py2sql.Py2SQL.db_connect(db_con_info)
+        py2sql.Py2SQL.save_class(Foo)
+        py2sql.Py2SQL.save_object(f)
+        self.assertTrue("foo" in py2sql.Py2SQL.db_tables())
+        py2sql.Py2SQL.delete_object(f)
+        py2sql.Py2SQL.delete_class(Foo)
+        self.assertTrue("foo" not in py2sql.Py2SQL.db_tables())
         py2sql.Py2SQL.db_disconnect()

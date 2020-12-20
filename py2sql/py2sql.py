@@ -193,10 +193,19 @@ class Py2SQL:
             >>> foo = Foo
             >>> Py2SQL.save_class(foo)
         """
-        Py2SQL.__save_class_with_foreign_key(class_, [])
+        Py2SQL.__save_class_with_foreign_key(class_)
 
     @staticmethod
-    def __save_class_with_foreign_key(class_, parents):
+    def __get_parent_classes(class_):
+        ret = set()
+        for i in class_.__bases__:
+            tmp = class_.__bases__
+            ret.add(i)
+            ret.union(Py2SQL.__get_parent_classes(i))
+        return ret
+
+    @staticmethod
+    def __save_class_with_foreign_key(class_):
         """This is private method that contains the logic of creating
         a PostgreSQL table with the foreign keys defined by parents. This method
         uses reflection to check annotated attributes of the class and decide
@@ -206,22 +215,21 @@ class Py2SQL:
         ----------
         class_ : the class that should be mapped onto the database.
 
-        parents : the classes that are considered as foreign to this class. That is,
-        these classes should be its parents and contain data that complements the
-        objects of type class_.
         """
         cur = Py2SQL.__connection.cursor()
         cur.execute("drop table if exists {};".format(class_.__name__))
-        annotated_data = None
-        for t in inspect.getmembers(class_, lambda a:not(inspect.isroutine(a))):
-            if t[0] == "__annotations__":
-                annotated_data = t[1]
+        annotated_data = dict()
+
+        classes = Py2SQL.__get_parent_classes(class_)
+        classes.add(class_)
+
+        for cur_class in classes:
+            for t in inspect.getmembers(cur_class, lambda a:not(inspect.isroutine(a))):
+                if t[0] == "__annotations__":
+                    annotated_data.update(t[1])
                 # `serial` is autoincremented!
         string_cmd = "create table if not exists {} (id serial primary key not null, ".format(class_.__name__)
         # Connect to already existing parent tables.
-        for p in parents:
-            parent_name = p.__name__
-            string_cmd += f"{parent_name}_id serial references {parent_name} (id), "
         for i in annotated_data.keys():
             string_cmd += "{} bytea, ".format(i)
         string_cmd = string_cmd[:-2]
@@ -339,3 +347,15 @@ class Py2SQL:
             Py2SQL.__save_class_with_foreign_key(front, front.__bases__)
             q = [*q, *list(front.__bases__)]
     """
+
+
+def test():
+    class Foo:
+        foo: str = "val"
+
+    f = Foo()
+    db_con_info = DBConnectionInfo("test", "localhost", "adminadminadmin", "postgres")
+    Py2SQL.Py2SQL.db_connect(db_con_info)
+    Py2SQL.Py2SQL.save_class(Foo)
+    Py2SQL.Py2SQL.save_object(f)
+    print("Good")

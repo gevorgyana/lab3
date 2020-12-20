@@ -14,11 +14,9 @@ TODO
 - No hierarchy (only save and delete)
 """
 
-
 def log(*msg):
     if DEBUG:
         print(*msg)
-
 
 @dataclass
 class DBConnectionInfo:
@@ -30,7 +28,6 @@ class DBConnectionInfo:
     password: str
     user: str
     port: int = 5432
-
 
 class Py2SQL:
     __connection = None
@@ -132,8 +129,7 @@ class Py2SQL:
         """
         cur = Py2SQL.__connection.cursor()
         # Reference: https://www.postgresql.org/docs/current/information-schema.html
-        string_cmd = "select column_name, data_type from information_schema.columns where table_name = '{}' and table_schema != 'information_schema' and table_schema not like 'pg%' ".format(
-            table)
+        string_cmd = "select column_name, data_type from information_schema.columns where table_name = '{}' and table_schema != 'information_schema' and table_schema not like 'pg%' ".format(table)
         log("executing:", string_cmd)
         cur.execute(string_cmd)
         retval = cur.fetchall()
@@ -188,8 +184,8 @@ class Py2SQL:
     def save_class(class_):
         """Populates the database with the representation of a class, by
         reading its columns. Does not try to create a table with a duplicate
-        name. The function pick ups parent classes,
-        and put it into Database using foreign key
+        name. The function pick ups parent classes members,
+        which and put it into class representation into Database.
 
         Examples:
         ---------
@@ -198,21 +194,19 @@ class Py2SQL:
      #       >>> foo = Foo()
      #       >>> Py2SQL.save_class(Foo)
         """
-        classes = Py2SQL.__get_parent_classes(class_)
-        classes.reverse()
-        for (cur_class, parent_class) in classes:
-            Py2SQL.__save_class_with_foreign_key(cur_class,  parent_class.__name__ if parent_class != object else '')
+
+        Py2SQL.__save_class_with_foreign_key(class_)
 
     @staticmethod
     def __get_parent_classes(class_):
-        ret = []
+        ret = set()
         for i in class_.__bases__:
-            ret.append((class_, i))
-            ret += Py2SQL.__get_parent_classes(i)
+            ret.add(i)
+            ret.union(Py2SQL.__get_parent_classes(i))
         return ret
 
     @staticmethod
-    def __save_class_with_foreign_key(class_, parent_name : str):
+    def __save_class_with_foreign_key(class_):
         """This is private method that contains the logic of creating
         a PostgreSQL table with the foreign keys defined by parents. This method
         uses reflection to check annotated attributes of the class and decide
@@ -228,19 +222,18 @@ class Py2SQL:
         cur.execute("drop table if exists {};".format(class_.__name__))
         annotated_data = dict()
 
-        for t in inspect.getmembers(class_, lambda a: not (inspect.isroutine(a))):
-            if t[0] == "__annotations__":
-                annotated_data.update(t[1])
-            # `serial` is autoincremented!
+        classes = Py2SQL.__get_parent_classes(class_)
+        classes.add(class_)
 
+        for cur_class in classes:
+            for t in inspect.getmembers(cur_class, lambda a:not(inspect.isroutine(a))):
+                if t[0] == "__annotations__":
+                    annotated_data.update(t[1])
+                # `serial` is autoincremented!
         string_cmd = "create table if not exists {} (id serial primary key not null, ".format(class_.__name__)
         # Connect to already existing parent tables.
         for i in annotated_data.keys():
             string_cmd += "{} bytea, ".format(i)
-
-        if parent_name != '':
-            string_cmd += f"{parent_name}_id serial references {parent_name} (id), "
-
         string_cmd = string_cmd[:-2]
         string_cmd += ");"
         log("executing:", string_cmd)
@@ -271,15 +264,14 @@ class Py2SQL:
 
         # In PostgreSQL, tables are always created with lowercase names,
         # TODO should store metatdata about which names are already taken
-        table_exists = cur.execute("select exists (select * from information_schema.tables where table_name = %s)",
-                                   tuple([table_name.lower()]))
+        table_exists = cur.execute("select exists (select * from information_schema.tables where table_name = %s)", tuple([table_name.lower()]))
         fetched = cur.fetchone()
         if fetched[0] == False:
             raise NotImplementedError("This ORM requires a user to run save_class() before running save_object()")
 
         annotated_data = dict()
-        for t in inspect.getmembers(object_, lambda a: not (inspect.isroutine(a))):
-            if t[0] == "__annotations__":
+        for t in inspect.getmembers(object_, lambda a:not(inspect.isroutine(a))):
+            if t[0] == "__dict__":
                 annotated_data.update(t[1])
 
         specific_columns = ""
@@ -356,3 +348,5 @@ class Py2SQL:
                 break
             Py2SQL.__save_class_with_foreign_key(front, front.__bases__)
             q = [*q, *list(front.__bases__)]
+
+

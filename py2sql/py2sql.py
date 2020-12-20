@@ -339,14 +339,39 @@ class Py2SQL:
 
     @staticmethod
     def save_hierarchy(root_class):
-        q = [root_class]
-        while len(q) > 0:
-            log("list log 1:", q)
-            front = q.pop()
-            if front == object:
-                log("stop")
-                break
-            Py2SQL.__save_class_with_foreign_key(front, front.__bases__)
-            q = [*q, *list(front.__bases__)]
+        """Creates the representation of the hierarchy in the database by looking at
+        the class subclass structure, then trying to find all derived class using __find_hierarchy
+         and add them to database
 
+        Parameters
+        ----------
+            root_class : the base class of class hierarchy
+        """
+        hierarchy = Py2SQL.__find_hierarchy(root_class)
+        for i in hierarchy:
+            Py2SQL.save_class(i)
+
+    @staticmethod
+    def __find_hierarchy(root_class):
+        """Creates set of derived classes using recursion
+
+        Parameters
+        ----------
+            root_class : the base class of class hierarchy
+        """
+        hierarchy = {root_class}
+        for i in root_class.__subclasses__():
+            hierarchy.update(Py2SQL.__find_hierarchy(i))
+        return hierarchy
+
+    @staticmethod
+    def delete_hierarchy(root_class):
+        """Deletes the representation of the hierarchy in the database by looking at
+        the class subclass structure, then trying to find all derived class using __find_hierarchy
+        and remove them from database
+
+        """
+        hierarchy = Py2SQL.__find_hierarchy(root_class)
+        for i in hierarchy:
+            Py2SQL.delete_class(i)
 

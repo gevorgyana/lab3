@@ -201,7 +201,6 @@ class Py2SQL:
     def __get_parent_classes(class_):
         ret = set()
         for i in class_.__bases__:
-            tmp = class_.__bases__
             ret.add(i)
             ret.union(Py2SQL.__get_parent_classes(i))
         return ret
@@ -228,7 +227,6 @@ class Py2SQL:
 
         for cur_class in classes:
             for t in inspect.getmembers(cur_class, lambda a:not(inspect.isroutine(a))):
-                tmp=inspect.getmembers(cur_class, lambda a:not(inspect.isroutine(a)))
                 if t[0] == "__annotations__":
                     annotated_data.update(t[1])
                 # `serial` is autoincremented!
@@ -272,7 +270,6 @@ class Py2SQL:
             raise NotImplementedError("This ORM requires a user to run save_class() before running save_object()")
 
         annotated_data = dict()
-        temp = inspect.getmembers(object_, lambda a: not (inspect.isroutine(a)))
         for t in inspect.getmembers(object_, lambda a:not(inspect.isroutine(a))):
             if t[0] == "__dict__":
                 annotated_data.update(t[1])
@@ -352,6 +349,4 @@ class Py2SQL:
             Py2SQL.__save_class_with_foreign_key(front, front.__bases__)
             q = [*q, *list(front.__bases__)]
 
-#    @staticmethod
-#    def __save_rel_hierarchy(base_class):
 

@@ -60,7 +60,6 @@ class TestSaveDeleteObject(unittest.TestCase):
         py2sql.Py2SQL.db_connect(db_con_info)
         py2sql.Py2SQL.save_class(Bar)
         py2sql.Py2SQL.save_object(b)
-        tmp=py2sql.Py2SQL.db_tables()
         self.assertTrue("bar" in py2sql.Py2SQL.db_tables())
         py2sql.Py2SQL.delete_object(b)
         py2sql.Py2SQL.delete_class(Bar)

@@ -5,7 +5,6 @@ import inspect
 import pickle
 import codecs
 
-DEBUG = False
 DEBUG = True
 
 """
@@ -213,8 +212,7 @@ class Py2SQL:
         for i in class_.__bases__:
             if i == object: break
             ret.add(i)
-            tmp = Py2SQL.get_parent_classes(i)
-            ret = ret.union(tmp)
+            ret = ret.union(Py2SQL.get_parent_classes(i))
         return ret
 
     @staticmethod

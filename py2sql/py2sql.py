@@ -370,6 +370,9 @@ class Py2SQL:
         the class subclass structure, then trying to find all derived class using __find_hierarchy
         and remove them from database
 
+        Parameters
+        ----------
+            root_class : the base class of class hierarchy
         """
         hierarchy = Py2SQL.__find_hierarchy(root_class)
         for i in hierarchy:

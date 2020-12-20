@@ -165,6 +165,16 @@ class Py2SQL:
         Py2SQL.__connection.commit()
 
     @staticmethod
+    def _select_from_table(table_name,params='column_name'):
+        cur = Py2SQL.__connection.cursor()
+        cur.execute("select {} from information_schema.columns where table_name = '{}';".format(params, table_name.lower()))
+        ret_val = cur.fetchall()
+        #"select column_name, data_type from information_schema.columns where table_name = '{}' and table_schema != 'information_schema' and table_schema not like 'pg%' ".format(table)
+        cur.close()
+        Py2SQL.__connection.commit()
+        return ret_val
+
+    @staticmethod
     def _drop_table(table_name):
         """Drops the table. This should not be exported to the user,
         as this only runs in unit tests. But it can't be done, as unit tests
@@ -198,11 +208,13 @@ class Py2SQL:
         Py2SQL.__save_class_with_foreign_key(class_)
 
     @staticmethod
-    def __get_parent_classes(class_):
+    def get_parent_classes(class_):
         ret = set()
         for i in class_.__bases__:
+            if i == object: break
             ret.add(i)
-            ret.union(Py2SQL.__get_parent_classes(i))
+            tmp = Py2SQL.get_parent_classes(i)
+            ret = ret.union(tmp)
         return ret
 
     @staticmethod
@@ -222,7 +234,7 @@ class Py2SQL:
         cur.execute("drop table if exists {};".format(class_.__name__))
         annotated_data = dict()
 
-        classes = Py2SQL.__get_parent_classes(class_)
+        classes = Py2SQL.get_parent_classes(class_)
         classes.add(class_)
 
         for cur_class in classes:

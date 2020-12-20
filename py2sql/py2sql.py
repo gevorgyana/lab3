@@ -164,7 +164,14 @@ class Py2SQL:
         Py2SQL.__connection.commit()
 
     @staticmethod
-    def _select_from_table(table_name,params='column_name'):
+    def _select_from_table(table_name, params='column_name'):
+        """Return information from database for selected table and params.
+        It desired to use for debugging, unit tests.
+        Parameters
+        ----------
+        table_name : table name of user's interest.
+        params : table params such as: column_name, data_type...
+        """
         cur = Py2SQL.__connection.cursor()
         cur.execute("select {} from information_schema.columns where table_name = '{}';".format(params, table_name.lower()))
         ret_val = cur.fetchall()

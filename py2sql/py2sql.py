@@ -5,7 +5,6 @@ import inspect
 import pickle
 import codecs
 
-DEBUG = False
 DEBUG = True
 
 """
@@ -165,6 +164,16 @@ class Py2SQL:
         Py2SQL.__connection.commit()
 
     @staticmethod
+    def _select_from_table(table_name,params='column_name'):
+        cur = Py2SQL.__connection.cursor()
+        cur.execute("select {} from information_schema.columns where table_name = '{}';".format(params, table_name.lower()))
+        ret_val = cur.fetchall()
+        #"select column_name, data_type from information_schema.columns where table_name = '{}' and table_schema != 'information_schema' and table_schema not like 'pg%' ".format(table)
+        cur.close()
+        Py2SQL.__connection.commit()
+        return ret_val
+
+    @staticmethod
     def _drop_table(table_name):
         """Drops the table. This should not be exported to the user,
         as this only runs in unit tests. But it can't be done, as unit tests
@@ -198,12 +207,12 @@ class Py2SQL:
         Py2SQL.__save_class_with_foreign_key(class_)
 
     @staticmethod
-    def __get_parent_classes(class_):
+    def _get_parent_classes(class_):
         ret = set()
         for i in class_.__bases__:
-            tmp = class_.__bases__
+            if i == object: break
             ret.add(i)
-            ret.union(Py2SQL.__get_parent_classes(i))
+            ret = ret.union(Py2SQL._get_parent_classes(i))
         return ret
 
     @staticmethod
@@ -223,12 +232,11 @@ class Py2SQL:
         cur.execute("drop table if exists {};".format(class_.__name__))
         annotated_data = dict()
 
-        classes = Py2SQL.__get_parent_classes(class_)
+        classes = Py2SQL._get_parent_classes(class_)
         classes.add(class_)
 
         for cur_class in classes:
             for t in inspect.getmembers(cur_class, lambda a:not(inspect.isroutine(a))):
-                tmp=inspect.getmembers(cur_class, lambda a:not(inspect.isroutine(a)))
                 if t[0] == "__annotations__":
                     annotated_data.update(t[1])
                 # `serial` is autoincremented!
@@ -281,7 +289,6 @@ class Py2SQL:
             raise NotImplementedError("This ORM requires a user to run save_class() before running save_object()")
 
         annotated_data = dict()
-        temp = inspect.getmembers(object_, lambda a: not (inspect.isroutine(a)))
         for t in inspect.getmembers(object_, lambda a:not(inspect.isroutine(a))):
             if t[0] == "__dict__":
                 annotated_data.update(t[1])
@@ -295,7 +302,6 @@ class Py2SQL:
         string_cmd = "insert into {} ({}) values (".format(table_name, specific_columns)
         attr_values = []
         for i in annotated_data.keys():
-            # import pdb; pdb.set_trace()
             string_cmd += "%s , "
             if type(annotated_data[i]) not in [str, int, float, bool]:
                 attr_values.append(pickle.dumps(object_.__dict__[i]))
@@ -342,7 +348,6 @@ class Py2SQL:
         annotated_attributes = object_.__annotations__
         for k in annotated_attributes.keys():
             sql_statement += "{} = %s and ".format(k)
-            import pdb; pdb.set_trace()
             if annotated_attributes[k] not in [str, int, float, bool]:
                 byte_repr.append(pickle.dumps(object_.__dict__[k]))
             else:
@@ -360,49 +365,41 @@ class Py2SQL:
 
     @staticmethod
     def save_hierarchy(root_class):
-        q = [root_class]
-        while len(q) > 0:
-            log("list log 1:", q)
-            front = q.pop()
-            if front == object:
-                log("stop")
-                break
-            Py2SQL.__save_class_with_foreign_key(front, front.__bases__)
-            q = [*q, *list(front.__bases__)]
+        """Creates the representation of the hierarchy in the database by looking at
+        the class subclass structure, then trying to find all derived class using __find_hierarchy
+         and add them to database
 
+        Parameters
+        ----------
+            root_class : the base class of class hierarchy
+        """
+        hierarchy = Py2SQL.__find_hierarchy(root_class)
+        for i in hierarchy:
+            Py2SQL.save_class(i)
 
-"""
-@dataclass
-class Bar:
-    done: bool = True
+    @staticmethod
+    def __find_hierarchy(root_class):
+        """Creates set of derived classes using recursion
 
-def test_save_class_called_twice():
-    db_name = "test"
-    table_name = "bar"
-    db_config = DBConnectionInfo(db_name, "localhost", "adminadminadmin", "postgres")
+        Parameters
+        ----------
+            root_class : the base class of class hierarchy
+        """
+        hierarchy = {root_class}
+        for i in root_class.__subclasses__():
+            hierarchy.update(Py2SQL.__find_hierarchy(i))
+        return hierarchy
 
-    Py2SQL.db_connect(db_config)
-    py2sql.Py2SQL.db_table_structure("bar")
-    try:
-        py2sql.Py2SQL.save_class(Bar)
+    @staticmethod
+    def delete_hierarchy(root_class):
+        """Deletes the representation of the hierarchy in the database by looking at
+        the class subclass structure, then trying to find all derived class using __find_hierarchy
+        and remove them from database
 
-        self.assertEqual([(0, 'id', 'integer'), (1, 'done', 'boolean')],
-                         py2sql.Py2SQL.db_table_structure("bar")
-        )
-        py2sql.Py2SQL.save_class(Bar)
-    except:
-        self.fail("save_class() should not throw after being called twice.")
-
-        self.assertEqual([(0, 'id', 'integer'), (1, 'done', 'bytea')],
-                         py2sql.Py2SQL.db_table_structure("bar")
-        )
-
-        py2sql.Py2SQL.delete_class(Bar)
-        self.assertEqual([],
-                         py2sql.Py2SQL.db_table_structure("bar")
-        )
-
-        py2sql.Py2SQL.db_disconnect()
-
-test_save_class_called_twice()
-"""
+        Parameters
+        ----------
+            root_class : the base class of class hierarchy
+        """
+        hierarchy = Py2SQL.__find_hierarchy(root_class)
+        for i in hierarchy:
+            Py2SQL.delete_class(i)

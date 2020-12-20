@@ -49,13 +49,20 @@ class TestSaveDeleteObject(unittest.TestCase):
         class Foo:
             foo: str = "val"
 
-        f = Foo()
+        class Bar(Foo):
+            bar: int = 2
+
+        b = Bar()
+        b.bar = 42
+        b.foo = "new val"
+
         db_con_info = py2sql.DBConnectionInfo("test", "localhost", "adminadminadmin", "postgres")
         py2sql.Py2SQL.db_connect(db_con_info)
-        py2sql.Py2SQL.save_class(Foo)
-        py2sql.Py2SQL.save_object(f)
-        self.assertTrue("foo" in py2sql.Py2SQL.db_tables())
-        py2sql.Py2SQL.delete_object(f)
-        py2sql.Py2SQL.delete_class(Foo)
-        self.assertTrue("foo" not in py2sql.Py2SQL.db_tables())
+        py2sql.Py2SQL.save_class(Bar)
+        py2sql.Py2SQL.save_object(b)
+        tmp=py2sql.Py2SQL.db_tables()
+        self.assertTrue("bar" in py2sql.Py2SQL.db_tables())
+        py2sql.Py2SQL.delete_object(b)
+        py2sql.Py2SQL.delete_class(Bar)
+        self.assertTrue("bar" not in py2sql.Py2SQL.db_tables())
         py2sql.Py2SQL.db_disconnect()

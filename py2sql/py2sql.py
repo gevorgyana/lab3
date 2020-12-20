@@ -62,7 +62,7 @@ class Py2SQL:
 
         Examples:
         ---------
-            >>> name, version = Py2SQL.db_engine()
+        #    >>> name, version = Py2SQL.db_engine()
         """
         cur = Py2SQL.__connection.cursor()
         string_cmd = "select version();"
@@ -184,15 +184,17 @@ class Py2SQL:
     def save_class(class_):
         """Populates the database with the representation of a class, by
         reading its columns. Does not try to create a table with a duplicate
-        name.
+        name. The function pick ups parent classes members,
+        which and put it into class representation into Database.
 
         Examples:
         ---------
-            >>> class Foo:
-            >>>     value str
-            >>> foo = Foo
-            >>> Py2SQL.save_class(foo)
+     #       >>> class Foo:
+     #       >>>     value str
+     #       >>> foo = Foo()
+     #       >>> Py2SQL.save_class(Foo)
         """
+
         Py2SQL.__save_class_with_foreign_key(class_)
 
     @staticmethod
@@ -209,7 +211,8 @@ class Py2SQL:
         """This is private method that contains the logic of creating
         a PostgreSQL table with the foreign keys defined by parents. This method
         uses reflection to check annotated attributes of the class and decide
-        the layout of the to-be-created table.
+        the layout of the to-be-created table.  The function pick ups parent classes
+        members, which are modified by Object and put
 
         Parameters
         ----------
@@ -245,7 +248,8 @@ class Py2SQL:
         """Writes a representation of the object to the database. It looks at the
         object't underlying type (via reflection) to decide where to write the object.
         This function uses the annotated attributes of the object's type to decide
-        what data to store in the database (columns).
+        what data to store in the database (columns). The function pick ups parent classes
+        members, which are modified by Object and put it into object representation into Database.
 
         Parameters
         ----------
@@ -336,7 +340,6 @@ class Py2SQL:
         Py2SQL.__connection.commit()
         cur.close()
 
-    """
     @staticmethod
     def save_hierarchy(root_class):
         q = [root_class]
@@ -348,5 +351,7 @@ class Py2SQL:
                 break
             Py2SQL.__save_class_with_foreign_key(front, front.__bases__)
             q = [*q, *list(front.__bases__)]
-    """
+
+#    @staticmethod
+#    def __save_rel_hierarchy(base_class):
 

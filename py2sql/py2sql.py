@@ -225,6 +225,7 @@ class Py2SQL:
 
         for cur_class in classes:
             for t in inspect.getmembers(cur_class, lambda a:not(inspect.isroutine(a))):
+                tmp=inspect.getmembers(cur_class, lambda a:not(inspect.isroutine(a)))
                 if t[0] == "__annotations__":
                     annotated_data.update(t[1])
                 # `serial` is autoincremented!
@@ -266,10 +267,11 @@ class Py2SQL:
         if fetched[0] == False:
             raise NotImplementedError("This ORM requires a user to run save_class() before running save_object()")
 
-        annotated_data = None
+        annotated_data = dict()
+        temp = inspect.getmembers(object_, lambda a: not (inspect.isroutine(a)))
         for t in inspect.getmembers(object_, lambda a:not(inspect.isroutine(a))):
-            if t[0] == "__annotations__":
-                annotated_data = t[1]
+            if t[0] == "__dict__":
+                annotated_data.update(t[1])
 
         specific_columns = ""
         for i in annotated_data.keys():
@@ -348,14 +350,3 @@ class Py2SQL:
             q = [*q, *list(front.__bases__)]
     """
 
-
-def test():
-    class Foo:
-        foo: str = "val"
-
-    f = Foo()
-    db_con_info = DBConnectionInfo("test", "localhost", "adminadminadmin", "postgres")
-    Py2SQL.Py2SQL.db_connect(db_con_info)
-    Py2SQL.Py2SQL.save_class(Foo)
-    Py2SQL.Py2SQL.save_object(f)
-    print("Good")

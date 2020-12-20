@@ -10,7 +10,7 @@ DEBUG = True
 
 """
 TODO
-- Map into user types (not only bytea)
+- Map into user types (not only bytea) (? done ?)
 - No hierarchy (only save and delete)
 """
 
@@ -235,7 +235,16 @@ class Py2SQL:
         string_cmd = "create table if not exists {} (id serial primary key not null, ".format(class_.__name__)
         # Connect to already existing parent tables.
         for i in annotated_data.keys():
-            string_cmd += "{} bytea, ".format(i)
+            if annotated_data[i] == str:
+                string_cmd += "{} text, ".format(i)
+            elif annotated_data[i] == int:
+                string_cmd += "{} integer, ".format(i)
+            elif annotated_data[i] == bool:
+                string_cmd += "{} boolean, ".format(i)
+            elif annotated_data[i] == float:
+                string_cmd += "{} double precision, ".format(i)
+            else:
+                string_cmd += "{} bytea, ".format(i)
         string_cmd = string_cmd[:-2]
         string_cmd += ");"
         log("executing:", string_cmd)
@@ -286,8 +295,12 @@ class Py2SQL:
         string_cmd = "insert into {} ({}) values (".format(table_name, specific_columns)
         attr_values = []
         for i in annotated_data.keys():
-            attr_values.append(pickle.dumps(object_.__dict__[i]))
-            string_cmd += "%s , ".format(pickle.dumps(object_.__dict__[i]))
+            # import pdb; pdb.set_trace()
+            string_cmd += "%s , "
+            if type(annotated_data[i]) not in [str, int, float, bool]:
+                attr_values.append(pickle.dumps(object_.__dict__[i]))
+            else:
+                attr_values.append(object_.__dict__[i])
         string_cmd = string_cmd[:-2]
         string_cmd += ")"
 
@@ -329,7 +342,12 @@ class Py2SQL:
         annotated_attributes = object_.__annotations__
         for k in annotated_attributes.keys():
             sql_statement += "{} = %s and ".format(k)
-            byte_repr.append(pickle.dumps(object_.__dict__[k]))
+            import pdb; pdb.set_trace()
+            if annotated_attributes[k] not in [str, int, float, bool]:
+                byte_repr.append(pickle.dumps(object_.__dict__[k]))
+            else:
+                byte_repr.append(object_.__dict__[k])
+
         sql_statement = sql_statement[:-4]
         sql_statement += ";"
 
@@ -352,6 +370,39 @@ class Py2SQL:
             Py2SQL.__save_class_with_foreign_key(front, front.__bases__)
             q = [*q, *list(front.__bases__)]
 
-#    @staticmethod
-#    def __save_rel_hierarchy(base_class):
 
+"""
+@dataclass
+class Bar:
+    done: bool = True
+
+def test_save_class_called_twice():
+    db_name = "test"
+    table_name = "bar"
+    db_config = DBConnectionInfo(db_name, "localhost", "adminadminadmin", "postgres")
+
+    Py2SQL.db_connect(db_config)
+    py2sql.Py2SQL.db_table_structure("bar")
+    try:
+        py2sql.Py2SQL.save_class(Bar)
+
+        self.assertEqual([(0, 'id', 'integer'), (1, 'done', 'boolean')],
+                         py2sql.Py2SQL.db_table_structure("bar")
+        )
+        py2sql.Py2SQL.save_class(Bar)
+    except:
+        self.fail("save_class() should not throw after being called twice.")
+
+        self.assertEqual([(0, 'id', 'integer'), (1, 'done', 'bytea')],
+                         py2sql.Py2SQL.db_table_structure("bar")
+        )
+
+        py2sql.Py2SQL.delete_class(Bar)
+        self.assertEqual([],
+                         py2sql.Py2SQL.db_table_structure("bar")
+        )
+
+        py2sql.Py2SQL.db_disconnect()
+
+test_save_class_called_twice()
+"""
